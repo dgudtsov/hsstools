@@ -5,6 +5,7 @@ A set of useful tools to generate requests towards EPC or IMS HSS
 1. download archive
 2. unzip in
 3. ensure the following directory structure:
+
 .
 |-- conf
 |-- lib
