@@ -6,7 +6,7 @@ A set of useful tools to generate requests towards EPC or IMS HSS
 2. unzip in
 3. ensure the following directory structure:
 
-.  
+./hsstools  
 |-- conf  
 |-- lib  
 |-- log  
