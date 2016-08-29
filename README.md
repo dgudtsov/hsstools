@@ -1,5 +1,14 @@
 # HSS Tools
-A set of useful tools to generate requests towards EPC or IMS HSS
+A set of useful tools to generate requests towards EPC or IMS HSS.  
+Copyright (c) 2015-2016 Denis Gudtsov
+
+Use part of  Python Protocol Simulator project (c) Sergej Srepfler code - https://sourceforge.net/projects/pyprotosim/
+
+
+The following interfaces and commands are supported:
+ - Sh: UDR, SNR, PUR
+ - Cx (work in progress): LIR, UAR, MAR, SAR
+ - Zh (work in progress): MAR
 
 # Install
 1. download archive
@@ -30,6 +39,8 @@ Please note, i already included pyprotosim files into package.
 
 # Usage
 
+## Sh
+
 Format: ./Sh.py COMMAND MSISDN DATA  
 COMMAND: one of UDR, PUR, SNR  
 MSISDN: msisdn of the subscriber, without +  
@@ -51,3 +62,8 @@ example: ./Sh.py UDR 79999999999 TADS
 - to update data  
 example: ./Sh.py PUR 79999999999 MMTEL-Services  
 
+## Cx
+to do
+
+## Zh
+to do
