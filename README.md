@@ -16,11 +16,16 @@ lib - program libraries
 log - where log files are generated
 pyprotosim - external Python Protocol Simulator tool
 
+## Prerequisite
+Python version >= 2.6.6
+
 # Configure
 
 Edit conf/config_diam.py :
 1. setup hosts, ports, realms for HSS diameter connection
 2. define IMPI and IMPU domains
+3. point out pyprotosim_lib_path to directory where pyprotosim project files are located
+Please note, i already included pyprotosim files into package.
 
 # Usage
 
