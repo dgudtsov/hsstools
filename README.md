@@ -26,6 +26,8 @@ lib - program libraries
 log - where log files are generated  
 pyprotosim - external Python Protocol Simulator tool  
 
+4. chmod a+x Sh.py  
+
 ## Prerequisite
 Python version >= 2.6.6
 
