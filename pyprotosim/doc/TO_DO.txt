@@ -1,0 +1,3 @@
+Hopefully will migrate to pure python
+Radius Password (CHAP+Tunnel) needs to be tested/decoded
+

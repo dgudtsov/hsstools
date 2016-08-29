@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Based on the Wireshark dictionary.xml 2010-03-19 -->
+<!-- Unified command codes to use unique name 2012 May 08 -->
+<!-- EAP codes moved to separate dictionary 2012 May 13 -->
+<!-- Support for Tunnel Attributes 2012 Oct 24 -->
+<!-- Last change 2012 Oct 24 -->
+<dictionary>
+    <!-- *********************** Diameter Typedefs ************************* -->
+    <!-- Basic types are OctetString, UTF8String, Unsigned32/64, Integer32/64, Float32/64 -->
+    <!--                 IPAddress, Time -->
+    <typedef name="RadiusString"                    type="OctetString"/>
+    <typedef name="EncryptedRadiusString"           type="OctetString"/>
+    <typedef name="RadiusIpaddress"                 type="IPAddress"/>
+    <typedef name="RadiusInteger"                   type="Unsigned32"/>
+    <typedef name="RadiusStatusType"                type="OctetString"/>
+    <typedef name="RadiusTunnelInteger"             type="OctetString"/>
+    <typedef name="HashedRadiusString"              type="OctetString"/>
+    <typedef name="MessageAuthenticatorChecksum"    type="OctetString"/>
+    <typedef name="IPv6Address"                     type="IPAddress"/>
+    <typedef name="IPv6Prefix"                      type="OctetString"/>
+    <typedef name="RadiusText"                      type="UTF8String"/>
+    <typedef name="BufferReference"                 type="OctetString"/>
+    <typedef name="RadiusInteger"                   type="Unsigned32"/>
+    <typedef name="RadiusTime"                      type="Time"/>
+    <typedef name="RadiusDate"                      type="Time"/>
+    <!-- RADIUS specific - implemented -->
+    <typedef name="RadiusTunnelInteger"             type="Unsigned24"/>
+    <typedef name="RadiusTunnelString"              type="TaggedString"/>
+    <typedef name="RadiusTunnelPassword"            type="TaggedPassword"/>
+    <!-- RADIUS specific - not implemented -->
+    <typedef name="EncryptedChapPassword"           type="EncryptedPassword"/>
+    <!-- *********************** Radius Vendors ************************* -->
+    <vendor code="0"     vendor-id="None"       name="None" />
+    <vendor code="10415" vendor-id="TGPP"       name="3rd Generation Partnership Project (3GPP)" />
+    <!-- *********************** Radius command codes ************************* -->
+    <command code="1"   name="Access-Request"/> 
+    <command code="2"   name="Access-Accept"/> 
+    <command code="3"   name="Access-Reject"/> 
+    <command code="4"   name="Accounting-Request"/> 
+    <command code="5"   name="Accounting-Response"/> 
+    <command code="6"   name="Interim-Accounting"/> 
+    <command code="7"   name="Password-Request"/> 
+    <command code="8"   name="Password-Ack"/> 
+    <command code="9"   name="Password-Reject"/> 
+    <command code="10"  name="Accounting-Message"/> 
+    <command code="11"  name="Access-Challenge"/> 
+    <command code="12"  name="Status-Server"/> 
+    <command code="13"  name="Status-Client"/> 
+    <command code="21"  name="Resource-Free-Request"/> 
+    <command code="22"  name="Resource-Free-Response"/> 
+    <command code="23"  name="Resource-Query-Request"/> 
+    <command code="24"  name="Resource-Query-Response"/> 
+    <command code="25"  name="Alternate-Resource-Reclaim-Request"/> 
+    <command code="26"  name="NAS-Reboot-Request"/> 
+    <command code="27"  name="NAS-Reboot-Response"/> 
+    <command code="29"  name="Next-Passcode"/> 
+    <command code="30"  name="New-Pin"/> 
+    <command code="31"  name="Terminate-Session"/> 
+    <command code="32"  name="Password-Expired"/> 
+    <command code="33"  name="Event-Request"/> 
+    <command code="34"  name="Event-Response"/> 
+    <command code="40"  name="Disconnect-Request"/> 
+    <command code="41"  name="Disconnect-ACK"/> 
+    <command code="42"  name="Disconnect-NAK"/> 
+    <command code="43"  name="CoA-Request"/> 
+    <command code="44"  name="CoA-ACK"/> 
+    <command code="45"  name="CoA-NAK"/> 
+    <command code="50"  name="IP-Address-Allocate"/> 
+    <command code="51"  name="IP-Address-Release"/> 
+    <command code="250" name="Experimental-Use"/> 
+    <command code="255" name="Reserved"/> 
+    <!-- *********************** Radius base AVPs ************************* -->
+    <avp code="1" name="User-Name"       type="RadiusString" />
+    <avp code="2" name="User-Password"   type="EncryptedRadiusString" />
+    <avp code="3" name="CHAP-Password"   type="RadiusString" />
+    <avp code="4" name="NAS-IP-Address"  type="RadiusIpaddress" />
+    <avp code="5" name="NAS-Port"        type="RadiusInteger" />
+    <avp code="6" name="Service-Type"    type="RadiusInteger" />
+    <avp code="7" name="Framed-Protocol" type="RadiusInteger" />
+    <avp code="8" name="Framed-IP-Address" type="RadiusIpaddress" />
+    <avp code="9" name="Framed-IP-Netmask" type="RadiusIpaddress" />
+    <avp code="10" name="Framed-Routing" type="RadiusInteger" />
+    <avp code="11" name="Filter-Id" type="RadiusString" />
+    <avp code="12" name="Framed-MTU" type="RadiusInteger" />
+    <avp code="13" name="Framed-Compression" type="RadiusInteger" />
+    <avp code="14" name="Login-IP-Host" type="RadiusIpaddress" />
+    <avp code="15" name="Login-Service" type="RadiusInteger"/>
+    <avp code="16" name="Login-TCP-Port" type="RadiusInteger"/>
+    <avp code="17" name="Change-Password" type="RadiusInteger"/>
+    <avp code="18" name="Reply-Message" type="RadiusString" />
+    <avp code="19" name="Callback-Number" type="RadiusString" />
+    <avp code="20" name="Callback-Id" type="RadiusString" />
+    <avp code="21" name="Password-Expiration" type="RadiusString" />
+    <avp code="22" name="Framed-Route" type="RadiusString" />
+    <avp code="23" name="Framed-IPX-Network" type="RadiusIpaddress" />
+    <avp code="24" name="State" type="RadiusString" />
+    <avp code="25" name="Class" type="RadiusString" />
+    <avp code="26" name="Vendor-Specific" type="RadiusString" />
+    <avp code="27" name="Session-Timeout" type="RadiusInteger" />
+    <avp code="28" name="Idle-Timeout" type="RadiusInteger" />
+    <avp code="29" name="Termination-Action" type="RadiusInteger" />
+    <avp code="30" name="Called-Station-Id" type="RadiusString" />
+    <avp code="31" name="Calling-Station-Id" type="RadiusString" />
+    <avp code="32" name="NAS-Identifier" type="RadiusString" />
+    <avp code="33" name="Proxy-State" type="RadiusString" />
+    <avp code="34" name="Login-LAT-Service" type="RadiusString" />
+    <avp code="35" name="Login-LAT-Node" type="RadiusString" />
+    <avp code="36" name="Login-LAT-Group" type="RadiusString" />
+    <avp code="37" name="Framed-Appletalk-Link" type="RadiusInteger" />
+    <avp code="38" name="Framed-Appletalk-Network" type="RadiusInteger" />
+    <avp code="39" name="Framed-Appletalk-Zone" type="RadiusString" />
+    <avp code="40" name="Acct-Status-Type" type="RadiusStatusType" />
+    <avp code="41" name="Acct-Delay-Time" type="RadiusInteger" />
+    <avp code="42" name="Acct-Input-Octets" type="RadiusInteger" />
+    <avp code="43" name="Acct-Output-Octets" type="RadiusInteger" />
+    <avp code="44" name="Acct-Session-Id" type="RadiusString" />
+    <avp code="45" name="Acct-Authentic" type="RadiusInteger" />
+    <avp code="46" name="Acct-Session-Time" type="RadiusInteger" />
+    <avp code="47" name="Acct-Input-Packets" type="RadiusInteger" />
+    <avp code="48" name="Acct-Output-Packets" type="RadiusInteger" />
+    <avp code="49" name="Acct-Terminate-Cause" type="RadiusInteger" />
+    <avp code="50" name="Acct-Multi-Session-Id" type="RadiusString" />
+    <avp code="51" name="Acct-Link-Count" type="RadiusInteger" />
+    <avp code="52" name="Acct-Input-Gigawords" type="RadiusInteger" />
+    <avp code="53" name="Acct-Output-Gigawords" type="RadiusInteger" />
+    <avp code="55" name="Event-Timestamp" type="RadiusInteger" />
+    <avp code="56" name="Egress-VLANID" type="RadiusInteger" />
+    <avp code="57" name="Ingress-Filters" type="RadiusInteger" />
+    <avp code="58" name="Egress-VLAN-Name" type="RadiusInteger" />
+    <avp code="59" name="User-Priority-Table" type="RadiusInteger" />
+    <avp code="60" name="CHAP-Challenge" type="RadiusString" />
+    <avp code="61" name="NAS-Port-Type" type="RadiusInteger" />
+    <avp code="62" name="Port-Limit" type="RadiusInteger" />
+    <avp code="63" name="Login-LAT-Port" type="RadiusString" />
+    <avp code="64" name="Tunnel-Type" type="RadiusTunnelInteger" />
+    <avp code="65" name="Tunnel-Medium-Type" type="RadiusTunnelInteger" />
+    <avp code="66" name="Tunnel-Client-Endpoint" type="RadiusTunnelString" />
+    <avp code="67" name="Tunnel-Server-Endpoint" type="RadiusTunnelString" />
+    <avp code="68" name="Acct-Tunnel-Connection" type="RadiusTunnelString" />
+    <avp code="69" name="Tunnel-Password" type="RadiusTunnelPassword" />
+    <avp code="70" name="ARAP-Password" type="RadiusString" />
+    <avp code="71" name="ARAP-Features" type="RadiusString" />
+    <avp code="72" name="ARAP-Zone-Access" type="RadiusInteger" />
+    <avp code="73" name="ARAP-Security" type="RadiusInteger" />
+    <avp code="74" name="ARAP-Security-Data" type="RadiusString" />
+    <avp code="75" name="Password-Retry" type="RadiusInteger" />
+    <avp code="76" name="Prompt" type="RadiusInteger" />
+    <avp code="77" name="Connect-Info" type="RadiusString" />
+    <avp code="78" name="Configuration-Token" type="RadiusString" />
+    <avp code="79" name="EAP-Message" type="RadiusString" />
+    <avp code="80" name="Message-Authenticator" type="MessageAuthenticatorChecksum" />
+    <avp code="81" name="Tunnel-Private-Group-ID" type="RadiusTunnelString" />
+    <avp code="82" name="Tunnel-Assignment-ID" type="RadiusTunnelString" />
+    <avp code="83" name="Tunnel-Preference" type="RadiusTunnelInteger" />
+    <avp code="84" name="ARAP-Challenge-Response" type="RadiusString" />
+    <avp code="85" name="Acct-Interim-Interval" type="RadiusInteger" />
+    <avp code="86" name="Acct-Tunnel-Packets-Lost" type="RadiusTunnelInteger" />
+    <avp code="87" name="NAS-Port-Id" type="RadiusString" />
+    <avp code="88" name="Framed-Pool" type="RadiusString" />
+    <avp code="89" name="CUI" type="RadiusString" />
+    <avp code="90" name="Tunnel-Client-Auth-ID" type="RadiusTunnelString" />
+    <avp code="91" name="Tunnel-Server-Auth-ID" type="RadiusTunnelString" />
+      <!-- IANA: 92-93 unassigned -->
+    <avp code="94" name="Originating-Line-Info" type="RadiusString" />
+    <!-- 95-100 as defined in RFC 3162  -->
+    <avp code="95" name="NAS-IPv6-Address" type="IPv6Address" />
+    <avp code="96" name="Framed-Interface-Id" type="RadiusString" />
+    <avp code="97" name="Framed-IPv6-Prefix" type="IPv6Prefix" />
+    <avp code="123" name="Delegated-IPv6-Prefix" type="IPv6Prefix" />
+    <avp code="98" name="Login-IPv6-Host" type="IPv6Address" />
+    <avp code="99" name="Framed-IPv6-Route" type="RadiusString" />
+    <!-- IANA: conflicting information, taking IANA as source -->
+    <avp code="100" name="Framed-IPv6-Pool" type="RadiusString" />
+    <avp code="101" name="Error-Cause" type="RadiusInteger" />
+    <avp code="102" name="EAP-Key-Name" type="RadiusString" />
+    <avp code="103" name="Digest-Response" type="RadiusString" />
+    <avp code="104" name="Digest-Realm" type="RadiusString" />
+    <avp code="105" name="Digest-Nonce" type="RadiusString" />
+    <avp code="106" name="Digest-Nextnonce" type="RadiusString" />
+    <avp code="107" name="Digest-Response-Auth" type="RadiusString" />
+    <avp code="108" name="Digest-Method" type="RadiusString" />
+    <avp code="109" name="Digest-URI" type="RadiusString" />
+    <avp code="110" name="Digest-Qop" type="RadiusString" />
+    <avp code="111" name="Digest-Algorithm" type="RadiusString" />
+    <avp code="112" name="Digest-Entity-Body-Hash" type="RadiusString" />
+    <avp code="113" name="Digest-CNonce" type="RadiusString" />
+    <avp code="114" name="Digest-Nonce-Count" type="RadiusString" />
+    <avp code="115" name="Digest-Username" type="RadiusString" />
+    <avp code="116" name="Digest-Opaque" type="RadiusString" />
+    <avp code="117" name="Digest-Auth-Param" type="RadiusString" />
+    <avp code="118" name="Digest-AKA-Auts" type="RadiusString" />
+    <avp code="119" name="Digest-Domain" type="RadiusString" />
+    <avp code="120" name="Digest-Stale" type="RadiusString" />
+    <avp code="121" name="Digest-HA1" type="RadiusString" />
+    <avp code="122" name="SIP-AOR" type="RadiusString" />
+    <!-- IANA conflicting, taking IANA as source -->
+    <avp code="124" name="Call-Block-Duration" type="RadiusString" />
+    <avp code="125" name="Maximum-Call-Duration" type="RadiusString" />
+    <avp code="126"  name="Multi-Link-Flag" type="RadiusInteger" />
+    <avp code="127" name="Tunneling-Protocol" type="RadiusString" />
+    <avp code="128" name="Shared-Profile-Enable" type="RadiusString" />
+    <avp code="129" name="Primary-Home-Agent" type="RadiusString" />
+    <avp code="130" name="Secondary-Home-Agent" type="RadiusString" />
+    <avp code="131" name="Dialout-Allowed" type="RadiusString" />
+    <avp code="133" name="BACP-Enable" type="RadiusString" />
+    <avp code="134" name="DHCP-Maximum-Leases" type="RadiusString" />
+    <avp code="135" name="Primary-DNS-Server" type="RadiusIpaddress" />
+    <avp code="136" name="Secondary-DNS-Server" type="RadiusIpaddress" />
+    <avp code="137" name="Client-Assign-DNS" type="RadiusString" />
+    <avp code="138" name="User-Acct-Type" type="RadiusString" />
+    <avp code="139" name="User-Acct-Host" type="RadiusString" />
+    <avp code="140" name="User-Acct-Port" type="RadiusString" />
+    <avp code="141" name="User-Acct-Key" type="RadiusString" />
+    <avp code="142" name="User-Acct-Base" type="RadiusString" />
+    <avp code="143" name="User-Acct-Time" type="RadiusString" />
+    <avp code="144" name="Assign-IP-Client" type="RadiusIpaddress" />
+    <avp code="145" name="Assign-IP-Server" type="RadiusIpaddress" />
+    <avp code="146" name="Assign-IP-Global-Pool" type="RadiusString" />
+    <avp code="147" name="DHCP-Reply" type="RadiusInteger" />
+    <avp code="148" name="DHCP-Pool-Number" type="RadiusInteger" />
+    <avp code="149" name="Expect-Callback" type="RadiusInteger" />
+    <avp code="150" name="Event-Type" type="RadiusInteger" />
+    <avp code="151" name="Session-Svr-Key" type="RadiusString" />
+    <avp code="152" name="Multicast-Rate-Limit" type="RadiusInteger" />
+    <avp code="153" name="IF-Netmask" type="RadiusIpaddress" />
+    <avp code="154" name="Remote-Addr" type="RadiusIpaddress" />
+    <avp code="155" name="Multicast-Client" type="RadiusInteger" />
+    <avp code="156" name="FR-Circuit-Name" type="RadiusString" />
+    <avp code="157" name="FR-LinkUp" type="RadiusInteger" />
+    <avp code="158" name="FR-Nailed-Grp" type="RadiusInteger" />
+    <avp code="159" name="FR-Type" type="RadiusInteger" />
+    <avp code="160" name="FR-Link-Mgt" type="RadiusInteger" />
+    <avp code="161" name="FR-N391" type="RadiusInteger" />
+    <avp code="162" name="FR-DCE-N392" type="RadiusInteger" />
+    <avp code="163" name="FR-DTE-N392" type="RadiusInteger" />
+    <avp code="164" name="FR-DCE-N393" type="RadiusInteger" />
+    <avp code="165" name="FR-DTE-N393" type="RadiusInteger" />
+    <avp code="166" name="FR-T391" type="RadiusInteger" />
+    <avp code="167" name="FR-T392" type="RadiusInteger" />
+    <avp code="168" name="Bridge-Address" type="RadiusString" />
+    <avp code="169" name="TS-Idle-Limit" type="RadiusInteger" />
+    <avp code="170" name="TS-Idle-Mode" type="RadiusInteger" />
+    <avp code="171" name="DBA-Monitor" type="RadiusInteger" />
+    <avp code="172" name="Base-Channel-Count" type="RadiusInteger" />
+    <avp code="173" name="Minimum-Channels" type="RadiusInteger" />
+    <avp code="174" name="IPX-Route" type="RadiusString" />
+    <avp code="175" name="FT1-Caller" type="RadiusInteger" />
+    <avp code="176" name="Backup" type="RadiusString" />
+    <avp code="177" name="Call-Type" type="RadiusInteger" />
+    <avp code="178" name="Group" type="RadiusString" />
+    <avp code="179" name="FR-DLCI" type="RadiusInteger" />
+    <avp code="180" name="FR-Profile-Name" type="RadiusString" />
+    <avp code="181" name="Ara-PW" type="RadiusString" />
+    <avp code="182" name="IPX-Node-Addr" type="RadiusString" />
+    <avp code="183" name="Home-Agent-IP-Addr" type="RadiusIpaddress" />
+    <avp code="184" name="Home-Agent-Password" type="RadiusString" />
+    <avp code="185" name="Home-Network-Name" type="RadiusString" />
+    <avp code="186" name="Home-Agent-UDP-Port" type="RadiusInteger" />
+    <avp code="187" name="Multilink-ID" type="RadiusInteger" />
+    <avp code="188" name="Num-In-Multilink" type="RadiusInteger" />
+    <avp code="189" name="First-Dest" type="RadiusIpaddress" />
+    <avp code="190" name="Pre-Input-Octets" type="RadiusInteger" />
+    <avp code="191" name="Pre-Output-Octets" type="RadiusInteger" />
+    <avp code="192" name="Pre-Input-Packets" type="RadiusInteger" />
+    <avp code="193" name="Pre-Output-Packets" type="RadiusInteger" />
+    <avp code="194" name="Maximum-Time" type="RadiusInteger" />
+    <avp code="195" name="Disconnect-Cause" type="RadiusInteger" />
+    <avp code="196" name="Connect-Progress" type="RadiusInteger" />
+    <avp code="197" name="Data-Rate" type="RadiusInteger" />
+    <avp code="198" name="PreSession-Time" type="RadiusInteger" />
+    <avp code="199" name="Token-Idle" type="RadiusInteger" />
+    <avp code="201" name="Require-Auth" type="RadiusInteger" />
+    <avp code="202" name="Number-Sessions" type="RadiusString" />
+    <avp code="203" name="Authen-Alias" type="RadiusString" />
+    <avp code="204" name="Token-Expiry" type="RadiusInteger" />
+    <avp code="205" name="Menu-Selector" type="RadiusString" />
+    <avp code="206" name="Menu-Item" type="RadiusString" />
+    <avp code="207" name="PW-Warntime" type="RadiusInteger" />
+    <avp code="208" name="PW-Lifetime" type="RadiusInteger" />
+    <avp code="209" name="IP-Direct" type="RadiusIpaddress" />
+    <avp code="210" name="PPP-VJ-Slot-Comp" type="RadiusInteger" />
+    <avp code="211" name="PPP-VJ-1172" type="RadiusInteger" />
+    <avp code="212" name="PPP-Async-Map" type="RadiusInteger" />
+    <avp code="213" name="Third-Prompt" type="RadiusString" />
+    <avp code="214" name="Send-Secret" type="RadiusString" />
+    <avp code="215" name="Receive-Secret" type="RadiusString" />
+    <avp code="216" name="IPX-Peer-Mode" type="RadiusInteger" />
+    <avp code="217" name="IP-Pool-Definition" type="RadiusString" />
+    <avp code="218" name="Assign-IP-Pool" type="RadiusInteger" />
+    <avp code="219" name="FR-Direct" type="RadiusInteger" />
+    <avp code="220" name="FR-Direct-Profile" type="RadiusString" />
+    <avp code="221" name="FR-Direct-DLCI" type="RadiusInteger" />
+    <avp code="222" name="Handle-IPX" type="RadiusInteger" />
+    <avp code="223" name="Netware-Timeout" type="RadiusInteger" />
+    <!-- IANA: implementation specific -->
+    <avp code="224" name="IMSI" type="RadiusString" />
+    <avp code="225" name="Charging-Id" type="RadiusInteger" />
+    <avp code="226" name="Prepaid-Ind" type="RadiusInteger" />
+    <avp code="227" name="GGSN-IP-Address" type="RadiusIpaddress" />
+    <avp code="228" name="SGSN-IP-Address" type="RadiusIpaddress" />
+    <avp code="229" name="Route-IPX" type="RadiusInteger" />
+    <avp code="230" name="Bridge" type="RadiusInteger" />
+    <avp code="231" name="Send-Auth" type="RadiusInteger" />
+    <avp code="232" name="Send-Passwd" type="RadiusString" />
+    <avp code="233" name="Link-Compression" type="RadiusInteger" />
+    <avp code="234" name="Target-Util" type="RadiusInteger" />
+    <avp code="235" name="Maximum-Channels" type="RadiusInteger" />
+    <avp code="236" name="Inc-Channel-Count" type="RadiusInteger" />
+    <avp code="237" name="Dec-Channel-Count" type="RadiusInteger" />
+    <avp code="238" name="Seconds-of-History" type="RadiusInteger" />
+    <avp code="239" name="History-Weigh-Type" type="RadiusInteger" />
+    <avp code="240" name="Add-Seconds" type="RadiusInteger" />
+    <avp code="241" name="Remove-Seconds" type="RadiusInteger" />
+    <avp code="242" name="Data-Filter" type="RadiusString" />
+    <avp code="243" name="Call-Filter" type="RadiusString" />
+    <avp code="244" name="Idle-Limit" type="RadiusInteger" />
+    <avp code="245" name="Preempt-Limit" type="RadiusInteger" />
+    <avp code="246" name="Callback" type="RadiusInteger" />
+    <avp code="247" name="Data-Svc" type="RadiusInteger" />
+    <avp code="248" name="Force-56" type="RadiusInteger" />
+    <avp code="249" name="Billing-Number" type="RadiusString" />
+    <avp code="250" name="Char-Noecho" type="RadiusInteger" />
+    <avp code="251" name="Transit-Number" type="RadiusString" />
+    <avp code="252" name="Host-Info" type="RadiusString" />
+    <avp code="253" name="PPP-Address" type="RadiusIpaddress" />
+    <avp code="254" name="MPP-Idle-Percent" type="RadiusInteger" />
+    <avp code="255" name="Xmit-Rate" type="RadiusInteger" />    
+    <!-- VSA AVPs 3GPP {{{ -->
+    <avp code="1"  name="3GPP-IMSI" type="RadiusString" vendor-id="TGPP" />
+    <avp code="2"  name="3GPP-Charging-Id" type="RadiusInteger" vendor-id="TGPP" />
+    <avp code="3"  name="3GPP-PDP-Type"  type="RadiusInteger" vendor-id="TGPP" />
+    <avp code="4"  name="3GPP-CG-Address" type="RadiusIpaddress" vendor-id="TGPP" />
+    <avp code="5"  name="3GPP-GPRS-QoS-Profile" type="RadiusString" vendor-id="TGPP" />
+    <avp code="6"  name="3GPP-SGSN-Address" type="RadiusIpaddress" vendor-id="TGPP" />
+    <avp code="6"  name="3GPP-GGSN-Address" type="RadiusIpaddress" vendor-id="TGPP" />
+    <avp code="8"  name="3GPP-IMSI-MCC-MNC" type="RadiusString" vendor-id="TGPP" />    
+    <avp code="9"  name="3GPP-GGSN-MCC-MNC" type="RadiusString" vendor-id="TGPP" />   
+    <avp code="10"  name="3GPP-NSAPI" type="RadiusString" vendor-id="TGPP" />       
+    <avp code="12"  name="3GPP-Selection-Mode" type="RadiusString" vendor-id="TGPP" />  
+    <avp code="13"  name="3GPP-Charging-Characteristics" type="RadiusString" vendor-id="TGPP" />   
+    <avp code="20"  name="3GPP-IMEISV" type="RadiusString" vendor-id="TGPP" />  
+    <avp code="20"  name="3GPP-RAT-Type" type="RadiusString" vendor-id="TGPP" />     
+    <avp code="22"  name="3GPP-User-Location-Info" type="RadiusString" vendor-id="TGPP" />   
+    <avp code="26"  name="3GPP-Negotiated-DSCP" type="RadiusString" vendor-id="TGPP" />      
+</dictionary>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Extended EAP definition with reserved field 2012 Feb 18 -->
+<!-- EAP codes moved to separate dictionary 2012 May 13-->
+<!-- Last change 2012 May 13 -->
+<dictionary>
+    <!-- *********************** EAP Codes ********************************* -->
+    <eap code="1"   name="AT_RAND"              reserved="reserved"/>
+    <eap code="2"   name="AT_AUTN"              reserved="reserved"/>
+    <eap code="3"   name="AT_RES"               reserved="bitlen"/>
+    <eap code="4"   name="AT_AUTS"              reserved="include"/>
+    <eap code="6"   name="AT_PADDING"           reserved="include"/>
+    <eap code="7"   name="AT_NONCE_MT"          reserved="reserved"/>
+    <eap code="10"  name="AT_PERMANENT_ID_REQ"  reserved="reserved"/>
+    <eap code="11"  name="AT_MAC"               reserved="reserved"/>
+    <eap code="12"  name="AT_NOTIFICATION"      reserved="value"/>
+    <eap code="13"  name="AT_ANY_ID_REQ"        reserved="reserved"/>
+    <eap code="14"  name="AT_IDENTITY"          reserved="bytelen"/>
+    <eap code="15"  name="AT_VERSION_LIST"      reserved="bytelen"/>
+    <eap code="16"  name="AT_SELECTED_VERSION"  reserved="value"/>
+    <eap code="17"  name="AT_FULLAUTH_ID_REQ"   reserved="reserved"/>
+    <eap code="19"  name="AT_COUNTER"           reserved="value"/>
+    <eap code="20"  name="AT_COUNTER_TOO_SMALL" reserved="reserved"/>
+    <eap code="21"  name="AT_NONCE_S"           reserved="reserved"/>
+    <eap code="22"  name="AT_CLIENT_ERROR_CODE" reserved="value"/>
+    <eap code="23"  name="AT_KDF_INPUT"         reserved="bytelen"/>
+    <eap code="24"  name="AT_KDF"               reserved="value"/>
+    <eap code="129" name="AT_IV"                reserved="reserved"/>
+    <eap code="130" name="AT_ENCR_DATA"         reserved="reserved"/>
+    <eap code="132" name="AT_NEXT_PSEUDONYM"    reserved="bytelen"/>
+    <eap code="133" name="AT_NEXT_REAUTH_ID"    reserved="bytelen"/>
+    <eap code="134" name="AT_CHECKCODE"         reserved="reserved"/>
+    <eap code="135" name="AT_RESULT_IND"        reserved="reserved"/>
+    <eap code="136" name="AT_BIDDING"           reserved="value"/>
+    <eap code="137" name="AT_PMS_IND"           reserved="reserved"/>
+    <eap code="138" name="AT_IPMS_RES"          reserved="reserved"/>
+    <eap code="139" name="AT_TRUST_IND"         reserved="reserved"/>
+    <!-- *********************** EAP sub-types ***************************** -->
+    <eapsub subtype="1"  name="AKA-Challenge"/>
+    <eapsub subtype="2"  name="AKA-Authentication-Reject"/>
+    <eapsub subtype="4"  name="AKA-Synchronization-Failure"/>
+    <eapsub subtype="5"  name="AKA-Identity"/>
+    <eapsub subtype="10" name="SIM-Start"/>
+    <eapsub subtype="11" name="SIM-Challenge"/>
+    <eapsub subtype="12" name="AKA/SIM-Notification"/>
+    <eapsub subtype="13" name="AKA/SIM-Reauthentication"/>
+    <eapsub subtype="14" name="AKA/SIM-Client-Error"/>
+</dictionary>

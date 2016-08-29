@@ -1,0 +1,43 @@
+ An implementation of the GSM A3A8 algorithm.  (Specifically, COMP128.) 
+
+ Copyright 1998, Marc Briceno, Ian Goldberg, and David Wagner.
+ All rights reserved.
+
+ For expository purposes only.  Coded in C merely because C is a much
+ more precise, concise form of expression for these purposes.  See Judge
+ Patel if you have any problems with this...
+ Of course, it's only authentication, so it should be exportable for the
+ usual boring reasons.
+
+
+ This software is free for commercial and non-commercial use as long as
+ the following conditions are aheared to.
+ Copyright remains the authors' and as such any Copyright notices in
+ the code are not to be removed.
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED ``AS IS'' AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
+ 
+ The license and distribution terms for any publicly available version or
+ derivative of this code cannot be changed.  i.e. this code cannot simply be
+ copied and put under another distribution license
+ [including the GNU Public License.]
+

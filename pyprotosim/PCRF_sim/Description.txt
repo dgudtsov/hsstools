@@ -1,0 +1,110 @@
+
+The practical example of testing Gx functionality by using PCRF simulator on basis of portable pyprotosim software.
+
+Example is given for Linux Ubuntu, python 2.7 is installed.
+
+Download and unzip the software
+
+Go to directory PCRF_sim
+
+chmod +x *.py
+
+./PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py
+
+To stop it, run CTRL+C
+
+*Optionally, if you want to start PCRF simulator as a daemon, you can install and use zdaemon utility:
+
+a) sudo apt-get install python-zdaemon
+
+b) START pcrf simulator as daemon:
+
+zdaemon -p "python PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py" -d start
+
+daemon process started, pid=4641
+
+c) verify that it is running as a daemon:
+
+ps -efl | grep PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py
+
+1 S pcef 4639 1 0 80 0 - 5645 poll_s 15:31 ? 00:00:00 /usr/bin/python /usr/bin/zdaemon -S schema.xml -b 10 -s zdsock -m 022 -x 0,2 python PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py
+
+0 S pcef 4641 4639 0 80 0 - 6176 poll_s 15:31 ? 00:00:00 python PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py
+
+
+
+c) TO STOP pcrf simulator, run command:
+
+zdaemon -p "python PCRF_SIMULATOR_GX_SERVER_WITH_SPR.py" -d stop
+
+4) verify that it is stopped:
+
+ps -efl | grep PCRF_SIMULATOR_GX_SERVER
+
+0 S pcef 4617 2189 0 80 0 - 1097 pipe_w 15:17 pts/1 00:00:00 grep --color=auto PCRF_SIMULATOR_GX_SERVER
+
+RUNNING TEST:
+
+In your PCRF_sim directory:
+Examine the test scenario in script tests_PGW_CCR_RAR_Gx_client.py
+
+Capture diameter traffic using tshark or tcpdump
+
+sudo tcpdump -i any -vvv -w /tmp/diam.cap port 3868 or port 3869
+
+Test scenario:
+
+Capabilities exchange between hosts:
+
+1) PCEF ---> CER -----> PCRF
+2) PCEF <--- CEA <----- PCRF
+
+PCEF sends CCR Initial request to PCRF, PCRF checks if user identity is valid in SPR DB . (The SPR DB is implemented as python dictionary with key of user's identity).
+PCRF reply with PCC Charging-Install Rule and QoS profile settings 'basic' for this user.
+
+3) PCEF ---> CCR-I ---> PCRF
+4)                      PCRF ---> SPR
+5) PCEF <--- CCA-I <-- PCRF <--- SPR (PCC rule)
+
+Now PCRF will send to PCEF RAR-U (Update) (Push operation) by using script called test_push_RAR-U.py (manually on Windows) (or you can send it automatically by uncommenting subprocess.call("./test_push_RAR-U.py" string in script)) with PCC-Charging-Remove old rule 'basic' and installs new PCC Charging-Install Rule and QoS profile settings 'highspeed' for this user. PCEF will reply with RAA 2001 OK reply and should enforce this policy (install new settings for this user).
+
+6) PCEF <--- RAR-U <--- PCRF
+7) PCEF ---> RAA ---> PCRF
+
+In terminal , you will see the following decoded AVP entries for Re-Auth Request:
+Decoded AVP (u'Charging-Rule-Remove', [(u'Charging-Rule-Base-Name', u'basic')])
+Decoded AVP (u'Charging-Rule-Install', [(u'Charging-Rule-Base-Name', u'highspeed')])
+
+Now user is logged off and PCEF informs PCRF by sending CCR-T (Terminate) to it, PCRF will terminate user session and reply with 2001 Success.
+
+8) PCEF ---> CCR-T ---> PCRF
+9) PCEF <--- CCA <--- PCRF
+
+Disconnect Pear Request to PCRF and 2001 Success Answer and close peer. ( PCRF simulator just reply with 2001 OK)
+
+10) PCEF ---> DPR ----> PCRF
+11) PCEF <--- DPA <---- PCRF
+
+The tcpdump capture communication details:
+
+pcef@pcef:~$ tshark -r /tmp/diam.cap -R 'diameter'
+
+CER/CEA
+4 0.014687 127.0.0.1 -> 127.0.0.1 DIAMETER 224 cmd=Capabilities-ExchangeRequest(257) flags=R--- appl=Diameter Common Messages(0) h2h=53511f9a e2e=fcd0000
+6 0.033021 127.0.0.1 -> 127.0.0.1 DIAMETER 228 cmd=Capabilities-ExchangeAnswer(257) flags=---- appl=Diameter Common Messages(0) h2h=53511f9a e2e=fcd0000
+
+CCR-I/CCA-I
+8 0.082948 127.0.0.1 -> 127.0.0.1 DIAMETER 364 cmd=Credit-ControlRequest(272) flags=RP-- appl=3GPP Gx(16777238) h2h=53511f9b e2e=fcd0001
+10 0.242987 127.0.0.1 -> 127.0.0.1 DIAMETER 532 cmd=Credit-ControlAnswer(272) flags=---- appl=3GPP Gx(16777238) h2h=53511f9b e2e=fcd0001
+
+RAR-U/RAA-U
+17 0.646213 127.0.0.1 -> 127.0.0.1 DIAMETER 632 cmd=Re-AuthRequest(258) flags=RP-- appl=3GPP Gx(16777238) h2h=53511f9a e2e=fcd0000
+22 1.089809 127.0.0.1 -> 127.0.0.1 DIAMETER 288 cmd=Re-AuthAnswer(258) flags=---- appl=3GPP Gx(16777238) h2h=53511f9a e2e=fcd0000
+
+CCR-T/CCA-T
+24 1.115780 127.0.0.1 -> 127.0.0.1 DIAMETER 364 cmd=Credit-ControlRequest(272) flags=RP-- appl=3GPP Gx(16777238) h2h=53511f9c e2e=fcd0002
+26 1.195397 127.0.0.1 -> 127.0.0.1 DIAMETER 284 cmd=Credit-ControlAnswer(272) flags=---- appl=3GPP Gx(16777238) h2h=53511f9c e2e=fcd0002
+
+DPR/DPA
+28 1.233210 127.0.0.1 -> 127.0.0.1 DIAMETER 152 cmd=Disconnect-PeerRequest(282) flags=R--- appl=Diameter Common Messages(0) h2h=53511f9d e2e=fcd0003
+30 1.238829 127.0.0.1 -> 127.0.0.1 DIAMETER 152 cmd=Disconnect-PeerAnswer(282) flags=---- appl=Diameter Common Messages(0) h2h=53511f9d e2e=fcd0003

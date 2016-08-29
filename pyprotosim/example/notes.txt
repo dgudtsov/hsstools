@@ -1,0 +1,13 @@
+The DHCP protocol has some specific requirements to really work properly - in particular being able to transmit to and receive packets sent to the all-ones limited broadcast address (255.255.255.255), and being able to send a unicast without an ARP.  It's not possible to do this via BSD/UDP sockets although dhcpd does also open a BSD/UDP socket (called the "fallback interface") that you will see in netstat.
+
+The raw socket:
+
+Receives all DHCP packets, so the DHCP packet sent to the server must come in on the interface the socket is opened on.
+Transmits directed unicasts (w/out ARP), and special RFC 2131 complying all-ones limited broadcasts.  These are needed in clients' initial configuration stage (when the client does not yet have an address configured).
+
+The BSD/UDP socket:
+
+Is read from to empty it and free up buffers (it will receive some packets that are duplicates of packets received via the raw socket.
+Is used to transmit routed unicasts.  These are used to reply to any relay agent, or to reply to clients apparently in the renewing state.
+It is possible to compile raw socket behaviour out for very specific reasons, but this will only work if you never have any directly-connected clients - that is clients on the same broadcast domain as the DHCP server.  All clients must be reached by relay agents in this case.
+

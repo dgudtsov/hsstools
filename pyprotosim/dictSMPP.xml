@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Based on the SMPP Protocol Specification v3.4 1999 Oct 12 -->
+<!-- Last change 2012 Nov 16 -->
+<dictionary>
+    <msg code="80000000" name="generic_nack"/> 
+    <msg code="00000001" name="bind_receiver">
+        <mandatory name="system_id" type="C-OS" max="16" />
+        <mandatory name="password" type="C-OS" max="9"/>
+        <mandatory name="system_type" type="C-OS" max="13"/>
+        <mandatory name="interface_version" type="Hex"/>
+        <mandatory name="addr_ton" type="Byte"/>
+        <mandatory name="addr_npi" type="Byte"/>
+        <mandatory name="address_range" type="C-OS" max="41"/>
+    </msg>   
+    <msg code="80000001" name="bind_receiver_resp">
+        <mandatory name="system_id" type="C-OS" max="16" />
+    </msg>        
+    <msg code="00000002" name="bind_transmitter">
+        <mandatory name="system_id" type="C-OS" max="16" />
+        <mandatory name="password" type="C-OS" max="9"/>
+        <mandatory name="system_type" type="C-OS" max="13"/>
+        <mandatory name="interface_version" type="Hex"/>
+        <mandatory name="addr_ton" type="Byte"/>
+        <mandatory name="addr_npi" type="Byte"/>
+        <mandatory name="address_range" type="C-OS" max="41"/>
+    </msg>
+    <msg code="80000002" name="bind_transmitter_resp">
+        <mandatory name="system_id" type="C-OS" max="16" />
+    </msg>  
+    <msg code="00000003" name="query_sm">    
+        <mandatory name="message_id" type="C-OS" max="65" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+    </msg>     
+    <msg code="80000003" name="query_sm_resp">        
+        <mandatory name="message_id" type="C-OS" max="65" />
+        <mandatory name="final_date" type="C-OS" max="17"/>
+        <mandatory name="message_state" type="Byte"/>
+        <mandatory name="error_code" type="Byte" max="21"/>
+    </msg>     
+    <msg code="00000004" name="submit_sm">
+        <mandatory name="service_type" type="C-OS" max="6" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="dest_addr_ton" type="Byte"/>
+        <mandatory name="dest_addr_npi" type="Byte"/>
+        <mandatory name="destination_addr" type="C-OS" max="21"/>
+        <mandatory name="esm_class" type="Byte"/>
+        <mandatory name="protocol_id" type="Byte"/>
+        <mandatory name="priority_flag" type="Byte"/>        
+        <mandatory name="schedule_delivery_time" type="C-OS" max="17" />
+        <mandatory name="validity_period" type="C-OS" max="17" />
+        <mandatory name="registered_delivery" type="Byte"/>
+        <mandatory name="replace_if_present_flag" type="Byte"/>     
+        <mandatory name="data_coding" type="Byte"/>
+        <mandatory name="sm_default_msg_id" type="Byte"/>        
+        <mandatory name="sm_length" type="Byte"/>
+        <mandatory name="short_message" type="OS" max="sm_length"/>        
+     </msg>         
+    <msg code="80000004" name="submit_sm_resp">
+        <mandatory name="message_id" type="C-OS" max="65" />
+    </msg>     
+    <msg code="00000005" name="deliver_sm">    
+        <mandatory name="service_type" type="C-OS" max="6" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="number_of_dests" type="Byte"/>
+        <mandatory name="dest_addr_ton" type="Byte"/>
+        <mandatory name="dest_addr_npi" type="Byte"/>
+        <mandatory name="destination_addr" type="C-OS" max="21"/>
+        <mandatory name="esm_class" type="Byte"/>
+        <mandatory name="protocol_id" type="Byte"/>
+        <mandatory name="priority_flag" type="Byte"/>        
+        <mandatory name="schedule_delivery_time" type="C-OS" max="17" />
+        <mandatory name="validity_period" type="C-OS" max="17" />
+        <mandatory name="registered_delivery" type="Byte"/>
+        <mandatory name="replace_if_present_flag" type="Byte"/>     
+        <mandatory name="data_coding" type="Byte"/>
+        <mandatory name="sm_default_msg_id" type="Byte"/>        
+        <mandatory name="sm_length" type="Byte"/>
+        <mandatory name="short_message" type="OS" max="sm_length"/>        
+    </msg>  
+    <msg code="80000005" name="deliver_sm_resp">     
+        <mandatory name="message_id" type="C-OS" max="1" />
+    </msg> 
+    <msg code="00000006" name="unbind"/>
+    <msg code="80000006" name="unbind_resp"/>
+    <msg code="00000007" name="replace_sm">    
+        <mandatory name="message_id" type="C-OS" max="65" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="schedule_delivery_time" type="C-OS" max="17" />
+        <mandatory name="validity_period" type="C-OS" max="17" />
+        <mandatory name="registered_delivery" type="Byte"/>
+        <mandatory name="replace_if_present_flag" type="Byte"/>     
+        <mandatory name="data_coding" type="Byte"/>
+        <mandatory name="sm_default_msg_id" type="Byte"/>        
+        <mandatory name="sm_length" type="Byte"/>
+        <mandatory name="short_message" type="OS" max="sm_length"/>        
+    </msg> 
+    <msg code="80000007" name="replace_sm_resp"/>     
+    <msg code="00000008" name="cancel_sm">    
+        <mandatory name="service_type" type="C-OS" max="6" />    
+        <mandatory name="message_id" type="C-OS" max="65" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="dest_addr_ton" type="Byte"/>
+        <mandatory name="dest_addr_npi" type="Byte"/>
+        <mandatory name="destination_addr" type="C-OS" max="21"/>
+    </msg> 
+    <msg code="80000008" name="cancel_sm_resp"/>     
+    <msg code="00000009" name="bind_transceiver">    
+        <mandatory name="system_id" type="C-OS" max="16" />
+        <mandatory name="password" type="C-OS" max="9"/>
+        <mandatory name="system_type" type="C-OS" max="13"/>
+        <mandatory name="interface_version" type="Hex"/>
+        <mandatory name="addr_ton" type="Byte"/>
+        <mandatory name="addr_npi" type="Byte"/>
+        <mandatory name="address_range" type="C-OS" max="41"/>
+    </msg>
+    <msg code="80000009" name="bind_transceiver_resp">     
+        <mandatory name="system_id" type="C-OS" max="16"/>
+    </msg> 
+    <msg code="0000000B" name="outbind">
+        <mandatory name="system_id" type="C-OS" max="16" />
+        <mandatory name="password" type="C-OS" max="9"/>
+    </msg>  
+    <msg code="00000015" name="enquire_link"/>    
+    <msg code="80000015" name="enquire_link_resp"/>     
+    <msg code="00000021" name="submit_multi">
+        <mandatory name="service_type" type="C-OS" max="6" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="number_of_dests" type="Byte"/>
+        <mandatory name="dest_address" type="DA" max="number_of_dests"/>
+        <mandatory name="esm_class" type="Byte"/>
+        <mandatory name="protocol_id" type="Byte"/>
+        <mandatory name="priority_flag" type="Byte"/>        
+        <mandatory name="schedule_delivery_time" type="C-OS" max="17" />
+        <mandatory name="validity_period" type="C-OS" max="17" />
+        <mandatory name="registered_delivery" type="Byte"/>
+        <mandatory name="replace_if_present_flag" type="Byte"/>     
+        <mandatory name="data_coding" type="Byte"/>
+        <mandatory name="sm_default_msg_id" type="Byte"/>        
+        <mandatory name="sm_length" type="Byte"/>
+        <mandatory name="short_message" type="OS" max="sm_length"/>        
+    </msg>  
+    <msg code="80000021" name="submit_multi_resp">
+        <mandatory name="message_id" type="C-OS" max="65" />
+        <mandatory name="no_unsuccess" type="Byte"/>
+        <mandatory name="unsuccess_sme" type="US" max="no_unsuccess" />
+    </msg>   
+    <msg code="00000102" name="alert_notification">    
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="65"/>
+        <mandatory name="esme_addr_ton" type="Byte"/>
+        <mandatory name="esme_addr_npi" type="Byte"/>
+        <mandatory name="esme_addr" type="C-OS" max="65"/>
+    </msg> 
+    <msg code="00000103" name="data_sm">     
+        <mandatory name="service_type" type="C-OS" max="6" />
+        <mandatory name="source_addr_ton" type="Byte"/>
+        <mandatory name="source_addr_npi" type="Byte"/>
+        <mandatory name="source_addr" type="C-OS" max="21"/>
+        <mandatory name="dest_addr_ton" type="Byte"/>
+        <mandatory name="dest_addr_npi" type="Byte"/>
+        <mandatory name="destination_addr" type="C-OS" max="65"/>
+        <mandatory name="esm_class" type="Byte"/>
+        <mandatory name="registered_delivery" type="Byte"/>
+        <mandatory name="data_coding" type="Byte"/>
+     </msg>         
+    <msg code="80000103" name="data_sm_resp">         
+        <mandatory name="message_id" type="C-OS" max="65" />
+    </msg> 
+<!-- Optional parameters -->
+
+    <optional code="0005" name="dest_addr_subunit" type="Byte"/>
+    <optional code="0006" name="dest_network_type" type="Byte"/>
+    <optional code="0007" name="dest_bearer_type" type="Byte"/>
+    <optional code="0008" name="dest_telematics_id" type="Word"/>
+    <optional code="000D" name="source_addr_subunit" />
+    <optional code="000E" name="source_network_type" type="Byte"/>
+    <optional code="000F" name="source_bearer_type" type="Byte"/>
+    <optional code="0010" name="source_telematics_id" type="Byte"/>
+    <optional code="0017" name="qos_time_to_live" type="Integer"/>
+    <optional code="0019" name="payload_type" type="Byte"/>
+    <optional code="001D" name="additional_status_info_text" type="C-OS" />
+    <optional code="001E" name="receipted_message_id" type="C-OS"/>
+    <optional code="0030" name=" ms_msg_wait_facilities" type="Byte"/>
+    <optional code="0201" name="privacy_indicator" type="Byte"/>
+    <optional code="0202" name="source_subaddress" type="OctetString"/>
+    <optional code="0203" name="dest_subaddress" type="OctetString"/>
+    <optional code="0204" name="user_message_reference" />
+    <optional code="0205" name="user_response_code" />
+    <optional code="020A" name="source_port" type="Word"/>
+    <optional code="020B" name="destination_port" type="Word"/>
+    <optional code="020C" name="sar_msg_ref_num" type="Word"/>
+    <optional code="020D" name="language_indicator" type="Byte"/>
+    <optional code="020E" name="sar_total_segments" type="Byte"/>
+    <optional code="020F" name="sar_segment_seqnum" type="Byte"/>
+    <optional code="0210" name="SC_interface_version" type="Byte"/>
+    <optional code="0302" name="callback_num_pres_ind" type="Byte"/>
+    <optional code="0303" name="callback_num_atag" type="OctetString"/>
+    <optional code="0304" name="number_of_messages" type="Byte"/>
+    <optional code="0381" name="callback_num" type="OctetString"/>
+    <optional code="0420" name="dpf_result" type="Byte"/>
+    <optional code="0421" name="set_dpf" type="Byte"/>
+    <optional code="0422" name="ms_availability_status" type="Byte"/>
+    <optional code="0423" name="network_error_code" type="OctetString"/>
+    <optional code="0424" name="message_payload" type="OctetString"/>
+    <optional code="0425" name="delivery_failure_reason" type="Byte"/>
+    <optional code="0426" name="more_messages_to_send" type="Byte"/>
+    <optional code="0427" name="message_state" type="Byte"/>
+    <optional code="0501" name="ussd_service_op" type="Byte"/>
+    <optional code="1201" name="display_time" type="Byte"/>
+    <optional code="1203" name="sms_signal" type="Word"/>
+    <optional code="1204" name="ms_validity" type="Byte"/>
+    <optional code="130C" name="alert_on_message_delivery" type="None"/>
+    <optional code="1380" name="its_reply_type" type="Byte"/>
+    <optional code="1383" name="its_session_info" type="Word"/>
+</dictionary>    

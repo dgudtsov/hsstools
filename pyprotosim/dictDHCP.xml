@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Based on the RFC 2131/2132 March 1997 -->
+<!-- Last change 2012 Sept 24 -->
+<dictionary>
+    <!-- *********************** Diameter Typedefs ************************* -->
+    <!-- Basic types are OctetString, UTF8String, Unsigned32/64, Integer32/64, Float32/64 -->
+    <!--                 IPIPAddress, Time -->
+    <!-- *********************** DHCP message command codes ************************* -->
+    <command code="1"   name="DHCP-Discovery"/> 
+    <command code="2"   name="DHCP-Offer"/> 
+    <command code="3"   name="DHCP-Request"/> 
+    <command code="4"   name="DHCP-Decline"/>     
+    <command code="5"   name="DHCP-ACK"/>     
+    <command code="6"   name="DHCP-NACK"/> 
+    <command code="7"   name="DHCP-Release"/> 
+    <command code="8"   name="DHCP-Inform"/>     
+    <!-- *********************** DHCP message command codes ************************* -->
+    <!-- 0 is PAD, 255 is END -->
+    <avp code="1"  len="4"  name="SubnetMask"           type="IPAddress" />
+    <avp code="2"  len="4"  name="TimeOffset"           type="Unsigned32" />
+    <avp code="3"           name="Router"               type="IPAddress" />
+    <avp code="4"           name="TimeServer"           type="IPAddress" />
+    <avp code="5"           name="NameServer"           type="IPAddress" />
+    <avp code="6"           name="DomainNameServer"     type="IPAddress" />
+    <avp code="7"           name="LogServer"            type="IPAddress" />
+    <avp code="8"           name="CoockieServer"        type="IPAddress" />
+    <avp code="9"           name="LPRServer"            type="IPAddress" />
+    <avp code="10"          name="ImpressServer"        type="IPAddress" />
+    <avp code="11"          name="ResourceLocationServer" type="IPAddress" />
+    <avp code="12"          name="HostName"             type="OctetString" />
+    <avp code="13" len="2"  name="BootFileSize"         type="Unsigned32" />
+    <avp code="14"          name="MeritDumpFile"        type="OctetString" />
+    <avp code="15"          name="DomainName"           type="OctetString" />
+    <avp code="16"          name="SwapServer"           type="IPAddress" />
+    <avp code="17"          name="RootPath"             type="OctetString" />
+    <avp code="18"          name="ExtensionPath"        type="OctetString" />
+    <avp code="19" len="1"  name="IPForwardingEnDis"    type="Unsigned32" />
+    <avp code="20" len="1"  name="NonLocalSourceRoutingEnDis" type="Unsigned32" />
+    <avp code="21"          name="PolicyFilter"         type="OctetString" />
+    <avp code="22" len="2"  name="MaxDgramReassemblySize" type="Unsigned32" />
+    <avp code="23" len="1"  name="DefaultIPTTL"         type="Unsigned32" />
+    <avp code="24" len="4"  name="PathMTUAgingTimeout"  type="Unsigned32" />
+    <avp code="25"          name="PathMTUPlateauTable"  type="Unsigned32" />
+    <avp code="26" len="2"  name="InterfaceMTU"         type="Unsigned32" />
+    <avp code="27" len="1"  name="AllSubnetsAreLocal"   type="Unsigned32" />
+    <avp code="28" len="4"  name="BroadcastIPAddress"     type="IPAddress" />
+    <avp code="29" len="1"  name="PerformMaskDiscovery" type="Unsigned32" />
+    <avp code="30" len="1"  name="MaskSupplier"         type="Unsigned32" />
+    <avp code="31" len="1"  name="PerformRouterDiscovery" type="Unsigned32" />
+    <avp code="32" len="4"  name="RouterSolicitationIPAddress" type="IPAddress" />
+    <avp code="33"          name="StaticRoute"          type="OctetString" />
+    <avp code="34" len="1"  name="TrailerEncapsulation" type="Unsigned32" />
+    <avp code="35" len="1"  name="ArpCacheTimeout"      type="Unsigned32" />
+    <avp code="36" len="1"  name="EthernetEncapsulation" type="Unsigned32" />
+    <avp code="37" len="1"  name="TCPDefaultTTL"        type="Unsigned32" />
+    <avp code="38" len="4"  name="TCPKeepaliveInterval" type="Unsigned32" />
+    <avp code="39" len="1"  name="TCPKeepalivaGarbage"  type="Unsigned32" />
+    <avp code="40"          name="NetworkInformationServiceDomain" type="OctetString" />
+    <avp code="41"          name="NetworkInformationServers" type="IPAddress" />
+    <avp code="42"          name="NetworkTimeProtocolServers" type="IPAddress" />
+    <avp code="43"          name="VendorSpecific"       type="OctetString" />
+    <avp code="44"          name="NetbiosOverTCPIPNameServer" type="IPAddress" />
+    <avp code="45"          name="NetbiosOverTCPIPDgramDistributionServer" type="IPAddress" />
+    <avp code="46" len="1"  name="NetbiosOverTCPIPNodeType" type="Unsigned32" />
+    <avp code="47"          name="NetbiosOverTCPIPScope" type="OctetString" />
+    <avp code="48"          name="XWindowsSystemFontServer" type="IPAddress" />
+    <avp code="49"          name="XWindowsSystemDisplayManager" type="IPAddress" />
+    <avp code="50" len="4"  name="RequestedIPIPAddress"   type="IPAddress" />   
+    <avp code="51" len="4"  name="IPIPAddressLeaseTime"   type="Unsigned32" />
+    <avp code="52" len="1"  name="OptionOverload"       type="Unsigned32" />
+    <avp code="53" len="1"  name="RealMessageType"      type="Unsigned32" />
+    <avp code="54" len="4"  name="ServerIdentifier"     type="IPAddress" />
+    <avp code="55"          name="ParameterRequestList" type="OctetString" />
+    <avp code="56"          name="Message"              type="OctetString" />
+    <avp code="57" len="2"  name="MaximumMessageSize"   type="Unsigned32" />
+    <avp code="58" len="4"  name="RenewalTimeValue"     type="Unsigned32" />
+    <avp code="59" len="4"  name="RebindingTimeValue"   type="Unsigned32" />
+    <avp code="60"          name="ClassIdentifier"      type="OctetString" />
+    <avp code="61"          name="ClientIdentifier"     type="OctetString" />
+    <avp code="64"          name="NISPlusDomain"        type="OctetString" />
+    <avp code="65"          name="NISPlusServers"       type="IPAddress" />
+    <avp code="66"          name="TFTPServerName"       type="OctetString" />
+    <avp code="67"          name="BootfileName"         type="OctetString" />
+    <avp code="68"          name="MobileIPHomeAgent"    type="IPAddress" />
+    <avp code="69"          name="SMTPServer"           type="IPAddress" />
+    <avp code="70"          name="POPServer"            type="IPAddress" />
+    <avp code="71"          name="NNTPServer"           type="IPAddress" />
+    <avp code="72"          name="WWWServer"            type="IPAddress" />
+    <avp code="73"          name="FingerServer"         type="IPAddress" />
+    <avp code="74"          name="IRCServer"            type="IPAddress" />
+    <avp code="75"          name="StreetTalkServer"     type="IPAddress" />
+    <avp code="76"          name="StreetTalkDirectoryAssistanceServer" type="IPAddress" />
+    <avp code="77"          name="UserClassInformation" type="OctetString" />
+    <avp code="93" len="2"  name="ClientSystemArchitecture" type="Unsigned32" />
+    <avp code="94" len="3"  name="ClientNetworkInterface" type="Unsigned32" />
+    <avp code="97"          name="UUID/GUID" type="OctetString" />
+</dictionary>
