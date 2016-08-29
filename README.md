@@ -2,7 +2,7 @@
 A set of useful tools to generate requests towards EPC or IMS HSS.  
 Copyright (c) 2015-2016 Denis Gudtsov
 
-Use part of  Python Protocol Simulator project (c) Sergej Srepfler code - https://sourceforge.net/projects/pyprotosim/
+Uses part of  Python Protocol Simulator project (c) Sergej Srepfler code - https://sourceforge.net/projects/pyprotosim/
 
 
 The following interfaces and commands are supported:
