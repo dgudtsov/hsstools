@@ -1,4 +1,4 @@
-# hsstools
+# HSS Tools
 A set of useful tools to generate requests towards EPC or IMS HSS
 
 # Install
