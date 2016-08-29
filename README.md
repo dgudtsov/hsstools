@@ -21,10 +21,10 @@ The following interfaces and commands are supported:
 |-- log  
 |-- pyprotosim  
 
-conf - where config file is stored
-lib - program libraries
-log - where log files are generated
-pyprotosim - external Python Protocol Simulator tool
+conf - where config file is stored  
+lib - program libraries  
+log - where log files are generated  
+pyprotosim - external Python Protocol Simulator tool  
 
 ## Prerequisite
 Python version >= 2.6.6
