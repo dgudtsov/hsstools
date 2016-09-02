@@ -28,7 +28,8 @@ pyprotosim - external Python Protocol Simulator tool
 4. chmod a+x Sh.py  
 
 ## Prerequisite
-Python version >= 2.6.6
+Python 2 version >= 2.6.6  
+Python 3 is not supported  
 
 # Configure
 Edit file conf/config_diam.py :  
