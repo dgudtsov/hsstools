@@ -21,6 +21,8 @@ import socket
 import datetime
 import time
 
+import xml.dom.minidom
+
 sys.path.append(pyprotosim_lib_path)
 from libDiameter import *
 
@@ -357,6 +359,9 @@ def diam_exec_req(Conn,msg):
 
     result_AVPs=splitMsgAVPs(RES.msg)
 
+    cmd = dictCOMMANDcode2name(RES.flags, RES.cmd)
+    hss_logger.debug("CMD code: %s", cmd)
+
 #    hss_logger.debug ("RES AVPs %s",result_AVPs)
     return result_AVPs
 
@@ -449,9 +454,36 @@ def read_xml_file(filename):
     try:
         xml_dom=xml.dom.minidom.parse(filename)
     except:
-        hss_logger.error ("failed to parse xml from file %s",filename)
+        hss_logger.error ("failed to parse xml from file %s : %s",filename,sys.exc_info())
         return None
     return xml_dom
+
+# returns Result-Code if any
+def print_result(result_AVPs):
+
+    result_code=findAVP("Result-Code",result_AVPs)
+    if result_code != -1:
+        result_descr=""
+        if result_code in diam_error_codes: result_descr=diam_error_codes[result_code]
+        hss_logger.info ("RES result code: %s %s", result_code, result_descr)
+
+        if result_code in DIAM_OK_CODE:
+            hss_logger.debug("DIAM_OK!")
+
+# result code is present, returning it
+        return result_code
+    else:
+        exp_result_AVP = findAVP("Experimental-Result",result_AVPs)
+        if exp_result_AVP != -1:
+            exp_result = dict(exp_result_AVP)
+            exp_result_code = exp_result['Experimental-Result-Code']
+
+            exp_result_descr=""
+            if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
+            hss_logger.warning ("RES exp result code: %s %s",exp_result_code,exp_result_descr)
+
+# result-code doesn't exist, return nothing
+    return
 
 def parse_result(result_AVPs):
     hss_logger.debug("Result AVP: %s", result_AVPs)

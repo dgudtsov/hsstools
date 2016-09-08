@@ -41,14 +41,16 @@ Please note, i already included pyprotosim files into package.
 # Usage
 
 ## Sh
-
+```
 Format: ./Sh.py COMMAND MSISDN DATA  
 COMMAND: one of UDR, PUR, SNR  
 MSISDN: msisdn of the subscriber, without +  
 DATA: Data-reference name OR Service-Indicator name of repository data  
 
 DATA possible values are: ['STN-SR', 'MSISDN', 'TADS', 'SRVCC', 'Location', 'IMSUserState', 'LocationAct', 'CSRN', 'CSCF', 'UserState', 'RepositoryData']  
-
+Service-Indicator any that's present in HSS,e.g: MMTEL-Services, IMS-ODB-Information, IMS-CAMEL-Services
+OR special value 'ALL' can be used (see below)
+```
 Examples:  
 - to read RepositoryData  
 example: ./Sh.py UDR 79999999999 MMTEL-Services  
@@ -62,6 +64,41 @@ example: ./Sh.py UDR 79999999999 TADS
 
 - to update data  
 example: ./Sh.py PUR 79999999999 MMTEL-Services  
+
+- How to update user-data with blank value?  
+1) prepare xml profile without ServiceData element, like:  
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Sh-Data>
+  <RepositoryData>
+    <ServiceIndication>YOUR_Service_Indicator</ServiceIndication>
+    <SequenceNumber>2</SequenceNumber>
+  </RepositoryData>
+</Sh-Data>
+```
+and save it into file named "YOUR_Service_Indicator". You may don't care about 
+SequenceNumber value, cause it is calculating automatically during update  
+
+2) run PUR command:  
+./Sh.py PUR 79999999999 YOUR_Service_Indicator  
+
+- How to manage xml profiles?  
+1) run UDR request, e.g.:  
+./Sh.py PUR 79999999999 MMTEL-Services  
+
+new file MMTEL-Services will be created with MMTel xml profile  
+
+2) use xmllint tool to pretty format xml and save result into MMTEL-Services.xml:  
+xmllint --format MMTEL-Services >MMTEL-Services.xml  
+
+3) make changes:  
+vim MMTEL-Services.xml  
+
+4) convert pretty formated xml into simplified version, back from MMTEL-Services.xml :  
+xmllint --noblanks MMTEL-Services.xml >MMTEL-Services  
+
+5) run PUR, it will read MMTEL-Services as input data :  
+./Sh.py PUR 79999999999 MMTEL-Services  
 
 ## Cx
 to do

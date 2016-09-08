@@ -107,6 +107,7 @@ def xml_get_seq(xml_doc):
     return int(seq)
 
 # takes xml.dom object and updates Node with new seq value
+# returns string
 def xml_update_seq(xml_dom,seq):
     xml_dom.getElementsByTagName("SequenceNumber")[0].firstChild.nodeValue=seq
     return xml_dom.toxml()
@@ -153,7 +154,6 @@ if __name__ == "__main__":
     # OPT: Service-Indicator or Data-Reference
     OPT = sys.argv[3]
 
-#    PUBLIC_IDENTITY="sip:+"+IDENTITY+params["IMPU_domain"]
     PUBLIC_IDENTITY=params["IMPU_format"].format(IDENTITY = IDENTITY,IMPU_domain = params["IMPU_domain"] )
 #    IMPI = IDENTITY+params["IMPI_domain"]
 
@@ -189,7 +189,6 @@ if __name__ == "__main__":
 #                    msg=create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
                     msg=create_SNR(params,SESSION_ID,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,UDR_AVP)
                     user_data=diam_retrive(Conn,msg)
-    #                user_data=diam_retrive(Conn,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
                     if ACTION == 'UDR':
                         if (user_data!=-1):
                             if len(user_data)>10:
@@ -215,8 +214,9 @@ if __name__ == "__main__":
                         except:
                             logger.error("loading data from file %s failed",filename)
                         else:
-                            # retrive current seq number
-                            if (user_data!=-1)&(len(user_data)>10):
+                            # retrive current seq number from previous UDR req
+#                            if (user_data!=-1)&(len(user_data)>10):
+                            if (user_data!=-1):
                             # then seq > 0
                                 sequence_num=xml_get_seq(user_data)+1
                             else:
@@ -225,14 +225,20 @@ if __name__ == "__main__":
 
                             PUR_AVP=UDR_AVP.copy()
                             UD=""
-                            if (xml_profile): UD=xml_update_seq(xml_profile,sequence_num)
-                            logger.info ("UD: "+UD.replace('\n',''))
-                            PUR_AVP["3GPP-User-Data"]=str(UD.replace('\n',''))
-                            logger.debug("PUR AVP: %s",PUR_AVP)
+                            if (xml_profile):
+                                UD = xml_update_seq(xml_profile,sequence_num)
+                                logger.info ("UD: "+UD.replace('\n',''))
+                                PUR_AVP["3GPP-User-Data"]=str(UD.replace('\n',''))
+                                logger.debug("PUR AVP: %s",PUR_AVP)
 
-#                            msg=create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,PUR_AVP)
-                            msg=create_PUR(params,SESSION_ID,PUR_AVP)
-                            user_data=diam_retrive(Conn,msg)
+                                msg=create_PUR(params,SESSION_ID,PUR_AVP)
+#                                user_data=diam_retrive(Conn,msg)
+                                result_AVPs = diam_exec_req(Conn, msg)
+
+                                if (print_result(result_AVPs) in DIAM_OK_CODE):
+                                        summary[UDR_AVP["Service-Indication"]] = True
+
+                                dump_Payload(result_AVPs)
 
                 ###########################################################
                 # Disconnecting peer
