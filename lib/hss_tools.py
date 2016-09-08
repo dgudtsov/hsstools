@@ -92,6 +92,12 @@ diam_exp_error_codes = {
 5452:"DIAMETER_ERROR_RAT_TYPE_NOT_ALLOWED"
 }
 
+auth_types = {
+    'SIP':'SIP-Digest',
+    'AKA':'Digest-AKAv1-MD5',
+    'NONE':''
+}
+
 def HSS_Connect(host,port,srchost,srcport):
     # Create a socket (SOCK_STREAM means a TCP socket)
     try:
@@ -101,7 +107,7 @@ def HSS_Connect(host,port,srchost,srcport):
         sock.connect((host, port))
         return sock
     except:
-        hss_logger("Error in HSS Connect: %s",sys.exc_info())
+        hss_logger.error("Error in HSS Connect: %s",sys.exc_info())
         return None
 
 def dump_Payload(avps):
@@ -116,6 +122,13 @@ def dump_Payload(avps):
                 hss_logger.debug("%s = %s", code,data)
         else:
                 hss_logger.debug("%s = %s", name, value)
+
+def dump_Cx_response(avps):
+    for avp in avps:
+        hss_logger.debug('decoding AVP: %s',avp)
+        (name,value)=decodeAVP(avp)
+        if name in ["3GPP-SIP-Auth-Data-Item"]:
+            hss_logger.info("%s = %s", name, value)
 
 def create_Session_Id(ORIGIN_HOST,IDENTITY):
     #The Session-Id MUST be globally and eternally unique
@@ -145,6 +158,9 @@ def create_CER(params):
              encodeAVP("Vendor-Id",params["VENDOR_ID"]),
             encodeAVP("Auth-Application-Id",params["APPLICATION_ID"])]))
     CER_avps.append(encodeAVP('Firmware-Revision',1))
+
+    hss_logger.debug("CER AVP: %s", CER_avps)
+    dump_Payload(CER_avps)
 
     # Create message header (empty)
     CER=HDRItem()
@@ -202,10 +218,14 @@ def diam_connect(Conn,params):
     prod_name = findAVP("Product-Name",Capabilities_avps)
     vendor = findAVP("Vendor-Id",Capabilities_avps)
 
+#    vendor_app_id = findAVP("Vendor-Specific-Application-Id",Capabilities_avps)
+#    auth_app_id = findAVP("Auth-Application-Id",vendor_app_id)
+
     test = findAVP("TEST",Capabilities_avps)
 
     if (prod_name) : hss_logger.info ("Product-Name: %s",prod_name)
     if (vendor) : hss_logger.info ("Vendor: %s",vendor)
+#    if (auth_app_id): hss_logger.info ("App id: %s",auth_app_id)
 
     hss_logger.debug("Capabilities AVP: %s", Capabilities_avps)
     dump_Payload(Capabilities_avps)
@@ -234,16 +254,35 @@ def diam_disconnect(Conn,params):
     return
 
 
-def create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-    return create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,"User-Data")
+#def create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
+def create_UDR(params,SESSION_ID,AVP):
+# some requests requires MSISDN instead of public-identity, currently not
+# supported
+#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
+    return create_REQ(params,SESSION_ID,AVP,"User-Data")
 
-def create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-    return create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,"Profile-Update")
+#def create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
+def create_PUR(params,SESSION_ID,AVP):
+# some requests requires MSISDN instead of public-identity, currently not
+# supported
+#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
+    return create_REQ(params,SESSION_ID,AVP,"Profile-Update")
 
-def create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-    return create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,"Subscribe-Notifications")
+#def create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
+def create_SNR(params,SESSION_ID,AVP):
+# some requests requires MSISDN instead of public-identity, currently not
+# supported
+#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
+    return create_REQ(params,SESSION_ID,AVP,"Subscribe-Notifications")
 
-def create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,CMD):
+def create_MAR(params,SESSION_ID,AVP):
+    return create_REQ(params,SESSION_ID,AVP,"Multimedia-Auth")
+
+def create_SAR(params,SESSION_ID,AVP):
+    return create_REQ(params,SESSION_ID,AVP,"Server-Assignment")
+
+#def create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,CMD):
+def create_REQ(params,SESSION_ID,AVP,CMD):
 
     REQ_avps=[]
     REQ_avps.append(encodeAVP("Session-Id", SESSION_ID))
@@ -253,7 +292,8 @@ def create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,CMD):
 
 # some requests requires MSISDN instead of public-identity, currently not
 # supported
-    REQ_avps.append(encodeAVP("User-Identity", [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]))
+#    REQ_avps.append(encodeAVP("User-Identity", [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]))
+#	REQ_avps.append(encodeAVP("Public-Identity", PRIVATE_IDENTITY))
 
     # 1 - NO_STATE_MAINTAINED
     REQ_avps.append(encodeAVP("Auth-Session-State", 1))
@@ -268,6 +308,7 @@ def create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,CMD):
         REQ_avps.append(encodeAVP(key, value))
 
     hss_logger.debug("REQ_avps: %s", REQ_avps)
+    dump_Payload(REQ_avps)
 #    logger.debug ("REQ AVPs %s",REQ_avps)
     # Create message header (empty)
     REQ=HDRItem()
@@ -336,26 +377,54 @@ def diam_retrive(Conn,msg):
 
 # act - action (udr/pur/snr)
 # opt - data ref
-def diam_prefill_req(act,opt):
+def diam_prefill_req(act,opt,IMPU=None,IMPI=None):
 
-    REQ_AVP={}
+    REQ_AVP = {}
 
-    if opt=="ALL":
-        opt = ALL_SI_items
-# check if opt parameter is in template list
-    if opt in UDR_Template:
-        REQ_AVP=UDR_Template[opt]
-# if not, then request it as service-indicator
-    else:
-        SI_items = opt.split(',')
-        hss_logger.info("SI items: %s",SI_items)
+    if act in ['SNR', 'UDR', 'PUR']:
 
-        REQ_Template={}
-        REQ_Template = SNR_Template if act=='SNR' else UDR_Template
+        if opt=="ALL":
+            opt = ALL_SI_items
+    # check if opt parameter is in template list
+    # like Location, etc...
+        if opt in UDR_Template:
+            REQ_AVP=UDR_Template[opt]
+        # add IMPU
+            REQ_AVP[0]["User-Identity"] = [ encodeAVP("Public-Identity",IMPU) ]
 
-    # good place to threat notf-eff support
-    # without Notif-Eff
-        REQ_AVP=map(lambda SI: fill_AVP_SI(REQ_Template,SI),SI_items)
+    # if not, then request it as service-indicator
+    # => Repository Data
+        else:
+            SI_items = opt.split(',')
+            hss_logger.info("SI items: %s",SI_items)
+
+            REQ_Template={}
+            REQ_Template = SNR_Template if act=='SNR' else UDR_Template
+            REQ_Template["RepositoryData"]["User-Identity"] = [ encodeAVP("Public-Identity",IMPU) ]
+
+        # good place to threat notf-eff support
+        # without Notif-Eff
+            REQ_AVP=map(lambda SI: fill_AVP_SI(REQ_Template,SI),SI_items)
+
+    return REQ_AVP
+
+# for Cx/Zh
+def diam_MAR_prefill_req (act,OPT,IMPU=None,IMPI=None):
+
+    REQ_AVP = {}
+
+    if act == "MAR" :
+        REQ_AVP=MAR_Template.copy()
+        # add auth scheme if required
+        if (OPT in auth_types) & (auth_types[OPT]!=""):
+            auth_AVP = [encodeAVP("3GPP-SIP-Authentication-Scheme",auth_types[OPT])]
+            REQ_AVP["3GPP-SIP-Auth-Data-Item"] = auth_AVP
+
+    elif act == "SAR" :
+        REQ_AVP=SAR_Template.copy()
+
+    if (IMPI): REQ_AVP["User-Name"] = IMPI
+    if (IMPU): REQ_AVP["Public-Identity"] = IMPU
 
     return REQ_AVP
 
@@ -387,22 +456,34 @@ def read_xml_file(filename):
 def parse_result(result_AVPs):
     hss_logger.debug("Result AVP: %s", result_AVPs)
     dump_Payload(result_AVPs)
+    exp_result_code = 0
 
     try:
-        exp_result=findAVP("Experimental-Result",result_AVPs)
+        exp_result_AVP = findAVP("Experimental-Result",result_AVPs)
+        if exp_result_AVP != -1:
+            exp_result = dict(exp_result_AVP)
+            exp_result_code = exp_result['Experimental-Result-Code']
     except:
         hss_logger.error ("UDA no exp result")
     else:
         exp_result_descr=""
-        if exp_result in diam_exp_error_codes: exp_result_descr=diam_exp_error_codes[exp_result]
-        hss_logger.info ("UDA exp result code: %s %s",exp_result,exp_result_descr)
+        if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
+        hss_logger.info ("UDA exp result code: %s %s",exp_result_code,exp_result_descr)
 
     try:
         user_data=findAVP("3GPP-User-Data",result_AVPs)
+        if user_data == -1:
+            user_data=findAVP("User-Data",result_AVPs)
+            if user_data == -1:
+                hss_logger.error ("no userdata")
+                return -1
+
     except:
         hss_logger.error ("no userdata")
         return -1
     else:
+        # remove xml formating
+        user_data = user_data.replace('\n', '').replace('\r', '')
         hss_logger.debug ("User-Data:\n%s",user_data)
         return user_data
 

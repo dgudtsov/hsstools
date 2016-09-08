@@ -18,7 +18,7 @@ Sh_params={
     "SRC_PORT":3868,
 
     # diameter params
-    "ORIGIN_HOST":"tas.ims.mnc000.mcc000.3gppnetwork.org",
+    "ORIGIN_HOST":"as.ims.mnc000.mcc000.3gppnetwork.org",
     "ORIGIN_REALM":"ims.mnc000.mcc000.3gppnetwork.org",
 
     # if HSS behind DRA, then dest_host shouldn't be used
@@ -27,9 +27,8 @@ Sh_params={
 
     # Sh App Id
     "APPLICATION_ID":16777217,
-    # Vendor id - Mavenir
-    "VENDOR_ID":25979,
-    "Product_Name":"TAS",
+    "VENDOR_ID":10415,
+    "Product_Name":"AS",
     #3GPP Vendor id
     "Supported_Vendor_Id":10415,
 
@@ -38,20 +37,42 @@ Sh_params={
 
     # is used to construct public identity in requests
     "IMPU_domain":"@ims.mnc000.mcc000.3gppnetwork.org",
-    "IMPI_domain":"@ims.mnc000.mcc000.3gppnetwork.org"
+    "IMPI_domain":"@ims.mnc000.mcc000.3gppnetwork.org",
+
+    # template how full IMPU & IMPI should be constructed
+    "IMPU_format": "sip:+{IDENTITY}{IMPU_domain}",
+    "IMPI_format": "{IDENTITY}{IMPI_domain}"
 }
 
 # make a copy of Sh options for Cx
 Cx_params=Sh_params.copy()
 
-# customize it
-Cx_params["APPLICATION_ID"]=16777216;
-
-
+# and Zh
 Zh_params=Cx_params.copy()
 
 # customize it
-Zh_params["APPLICATION_ID"]=16777221;
+Cx_params["APPLICATION_ID"]=16777216
+Cx_params["VENDOR_ID"]=10415
+
+Cx_params["SRC_HOST"] = "10.10.10.11"
+Cx_params["PORT"] = 3869
+Cx_params["ORIGIN_HOST"] = "scscf.ims.mnc000.mcc000.3gppnetwork.org"
+Cx_params["Server-Name"] = "sip:scscf.ims.mnc000.mcc000.3gppnetwork.org:5070"
+Cx_params.pop("DEST_HOST")
+
+
+# customize it
+Zh_params["APPLICATION_ID"]=16777221
+Zh_params["VENDOR_ID"]=10415
+Zh_params["SRC_HOST"] = "10.10.10.11"
+Zh_params["ORIGIN_HOST"] = "bsf.ims.mnc000.mcc000.3gppnetwork.org"
+Zh_params.pop("DEST_HOST")
+
+# delete Server-Name AVP from Zh params
+#Zh_params.pop("Server-Name")
+# OR redefine it
+Zh_params["Server-Name"] = "agw"
+
 
 conn_params={
     "Sh":Sh_params,
@@ -145,6 +166,22 @@ SNR_Template = {
         }
 }
 
+##### Cx
+
+MAR_Template={
+    "3GPP-SIP-Number-Auth-Items" : 1
+}
+
+SAR_Template={
+    "3GPP-SIP-Number-Auth-Items" : 1
+    # REGISTRATION (1)
+    ,"Server-Assignment-Type" : 1
+    # USER_DATA_NOT_AVAILABLE (0)
+    ,"User-Data-Already-Available" : 0
+}
+
+SAR_FileName = "SAR_UD"
+
 # print out the following XML element decoded
 CSLocation_Elements = ['ServiceAreaId','LocationAreaId','CellGlobalId','LocationNumber','VLRNumber','MSCNumber']
 
@@ -171,13 +208,14 @@ config_logger = logging.getLogger('hss_tools.config')
 # Let's assume that my Diameter messages will fit into 32k
 MSG_SIZE=32767
 
-def config_dump():
+def config_dump(key=None):
     config_logger.debug("Configuration dump:")
     config_logger.debug("Conn params: %s",conn_params)
     config_logger.debug("UDR: %s",UDR_Template)
     config_logger.debug("SNR: %s",SNR_Template)
     config_logger.debug("CS Loc: %s",CSLocation_Elements)
     config_logger.debug("MSG Size: %s",MSG_SIZE)
+    if (key): config_logger.debug("Module config: %s",conn_params[key])
 
 if __name__ == "__main__":
     config_logger.setLevel(logging.DEBUG)

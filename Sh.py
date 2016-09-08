@@ -135,7 +135,7 @@ def print_pretty_xml(xml_str):
 if __name__ == "__main__":
     logger.info('%s is started: %s',sys.argv[0], sys.argv[1:])
     logger.debug('Number of arguments: %s arguments.', len(sys.argv))
-    if len(sys.argv)<3:
+    if len(sys.argv)<4:
         logger.debug("program started with empty parameters")
         print HELP.format(APP_NAME = sys.argv[0], UDR = UDR_Template.keys(), ALL_SI = ALL_SI_items)
         logger.debug("exiting")
@@ -153,9 +153,12 @@ if __name__ == "__main__":
     # OPT: Service-Indicator or Data-Reference
     OPT = sys.argv[3]
 
-    PUBLIC_IDENTITY="sip:+"+IDENTITY+params["IMPU_domain"]
+#    PUBLIC_IDENTITY="sip:+"+IDENTITY+params["IMPU_domain"]
+    PUBLIC_IDENTITY=params["IMPU_format"].format(IDENTITY = IDENTITY,IMPU_domain = params["IMPU_domain"] )
+#    IMPI = IDENTITY+params["IMPI_domain"]
 
     logger.info("public ident: %s", PUBLIC_IDENTITY)
+#    logger.info("IMPI ident: %s", IMPI)
 
     # for summary report
     summary = {}
@@ -163,7 +166,7 @@ if __name__ == "__main__":
     if ACTION in ['UDR','PUR', 'SNR']:
         config_dump()
     # UDR action should precede PUR
-        UDR_AVPs=diam_prefill_req(ACTION,OPT)
+        UDR_AVPs=diam_prefill_req(ACTION,OPT,IMPU=PUBLIC_IDENTITY)
         logger.info("prefilled request: %s", UDR_AVPs)
 
         Conn=HSS_Connect(params["HOST"],params["PORT"],params["SRC_HOST"],params["SRC_PORT"])
@@ -183,7 +186,8 @@ if __name__ == "__main__":
 
                     logger.info("requesting %s", UDR_AVP )
 
-                    msg=create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
+#                    msg=create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
+                    msg=create_SNR(params,SESSION_ID,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,UDR_AVP)
                     user_data=diam_retrive(Conn,msg)
     #                user_data=diam_retrive(Conn,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
                     if ACTION == 'UDR':
@@ -226,7 +230,8 @@ if __name__ == "__main__":
                             PUR_AVP["3GPP-User-Data"]=str(UD.replace('\n',''))
                             logger.debug("PUR AVP: %s",PUR_AVP)
 
-                            msg=create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,PUR_AVP)
+#                            msg=create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,PUR_AVP)
+                            msg=create_PUR(params,SESSION_ID,PUR_AVP)
                             user_data=diam_retrive(Conn,msg)
 
                 ###########################################################
