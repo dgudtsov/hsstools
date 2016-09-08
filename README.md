@@ -34,7 +34,7 @@ Python 3 is not supported
 # Configure
 Edit file conf/config_diam.py :  
 1. setup hosts, ports, realms for HSS diameter connection  
-2. define IMPI and IMPU domains  
+2. define IMPI and IMPU domains, check IMPU and IMPI formats  
 3. point out pyprotosim_lib_path to directory where pyprotosim project files are located  
 Please note, i already included pyprotosim files into package.
 
