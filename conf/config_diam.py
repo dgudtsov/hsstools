@@ -22,7 +22,7 @@ Sh_params={
     "ORIGIN_REALM":"ims.mnc000.mcc000.3gppnetwork.org",
 
     # if HSS behind DRA, then dest_host shouldn't be used
-    "DEST_HOST":"hss.ims.mnc000.mcc000.3gppnetwork.org",
+#    "DEST_HOST":"hss.ims.mnc000.mcc000.3gppnetwork.org",
     "DEST_REALM":"ims.mnc000.mcc000.3gppnetwork.org",
 
     # Sh App Id
@@ -58,7 +58,7 @@ Cx_params["SRC_HOST"] = "10.10.10.11"
 Cx_params["PORT"] = 3869
 Cx_params["ORIGIN_HOST"] = "scscf.ims.mnc000.mcc000.3gppnetwork.org"
 Cx_params["Server-Name"] = "sip:scscf.ims.mnc000.mcc000.3gppnetwork.org:5070"
-Cx_params.pop("DEST_HOST")
+#Cx_params.pop("DEST_HOST")
 
 
 # customize it
@@ -66,7 +66,7 @@ Zh_params["APPLICATION_ID"]=16777221
 Zh_params["VENDOR_ID"]=10415
 Zh_params["SRC_HOST"] = "10.10.10.11"
 Zh_params["ORIGIN_HOST"] = "bsf.ims.mnc000.mcc000.3gppnetwork.org"
-Zh_params.pop("DEST_HOST")
+#Zh_params.pop("DEST_HOST")
 
 # delete Server-Name AVP from Zh params
 #Zh_params.pop("Server-Name")
@@ -187,6 +187,10 @@ CSLocation_Elements = ['ServiceAreaId','LocationAreaId','CellGlobalId','Location
 
 # print formated XML on screen
 PRINT_PRETTY_XML=True
+
+# SI data file
+DATA_FILE = "data/{SI}"
+
 
 ### Logging
 

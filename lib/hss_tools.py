@@ -201,10 +201,17 @@ def diam_connect(Conn,params):
     msg=create_CER(params)
     # msg now contains CER Request as hex string
 #    logger.debug("+"*30)
-    # send data
-    Conn.send(msg.decode("hex"))
-    # Receive response
-    received = Conn.recv(MSG_SIZE)
+
+    try:
+        # send data
+        Conn.send(msg.decode("hex"))
+        # Receive response
+        received = Conn.recv(MSG_SIZE)
+    except:
+        hss_logger.error("diam connection exception: %s",sys.exc_info())
+        return None
+
+
     # split header and AVPs
     CEA=HDRItem()
     stripHdr(CEA,received.encode("hex"))
@@ -344,14 +351,23 @@ def store_pcap():
 def diam_exec_req(Conn,msg):
 
 #    logger.debug("+"*30)
-    # send data
-    Conn.send(msg.decode("hex"))
+
+    try:
+        # send data
+        Conn.send(msg.decode("hex"))
+    except:
+        hss_logger.error("diam connection exception: %s",sys.exc_info())
+        return None
 
     # give a chance to HSS
     time.sleep(0.5)
 
-    # Receive response
-    received = Conn.recv(MSG_SIZE)
+    try:
+        # Receive response
+        received = Conn.recv(MSG_SIZE)
+    except:
+        hss_logger.error("diam connection exception: %s",sys.exc_info())
+        return None
 
     #response
     RES=HDRItem()
@@ -440,8 +456,11 @@ def fill_AVP_SI(REQ_Template,SI):
 
 
 def save_xml_file(filename,user_data):
+
+    full_filename = DATA_FILE.format(SI = filename)
+
     try:
-        file_target = open(filename, 'w')
+        file_target = open(full_filename, 'w')
         file_target.write(user_data)
         file_target.close()
         hss_logger.info ("file updated")
@@ -451,8 +470,11 @@ def save_xml_file(filename,user_data):
 
 # read XML and returns xml.dom object
 def read_xml_file(filename):
+
+    full_filename = DATA_FILE.format(SI = filename)
+
     try:
-        xml_dom=xml.dom.minidom.parse(filename)
+        xml_dom=xml.dom.minidom.parse(full_filename)
     except:
         hss_logger.error ("failed to parse xml from file %s : %s",filename,sys.exc_info())
         return None
