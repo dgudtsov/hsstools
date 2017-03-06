@@ -172,26 +172,26 @@ IMPI and IMPU are constructed from IMSI/MSISDN
 ```
 
 Examples:
-- to request SIP-Digest auth scheme
+- to request SIP-Digest auth scheme  
 example: ./Cx.py MAR 250009999999999 1234567 SIP
 
-- to request Digest-AKA auth scheme
+- to request Digest-AKA auth scheme  
 example: ./Cx.py MAR 250009999999999 1234567 AKA
 
-- to allow HSS select default auth scheme
+- to allow HSS select default auth scheme  
 example: ./Cx.py MAR 250009999999999 1234567 Unknown
 
-- to request Cx user profile
+- to request Cx user profile  
 example: ./Cx.py SAR 250009999999999 1234567
 profile will be displayed on screen and stored into ./data/SAR_UD file
 
-- to request CSCF where subscriber is registered or unreg service for subscriber
+- to request CSCF where subscriber is registered or unreg service for subscriber  
 example: ./Cx.py LIR 250009999999999 1234567
 server-name or server-capabilities will be displayed on screen
 
-- to request PSI service number
-to request PSI you need to uncomment "Public-Identity" : "{TEL}" in Cx config and comment out "Public-Identity" : "{IMPU}" and User-Name
-example: ./Cx.py LIR 0 1234567
+- to request PSI service number  
+to request PSI you need to uncomment "Public-Identity" : "{TEL}" in Cx config and comment out "Public-Identity" : "{IMPU}" and User-Name  
+example: ./Cx.py LIR 0 1234567  
 imsi is not required for PSI
 
 ## Zh
@@ -208,11 +208,11 @@ Examples:
 - to request SIP-Digest auth scheme
 example: ./Zh MAR 250009999999999 1234567 SIP
 
-- to request Digest-AKA auth scheme
+- to request Digest-AKA auth scheme  
 example: ./Zh MAR 250009999999999 1234567 AKA
 
-- to allow HSS select default auth scheme
+- to allow HSS select default auth scheme  
 example: ./Zh MAR 250009999999999 1234567 Unknown
 
-- The syntax of Zh request are fully equivalent to Cx MAR
+- The syntax of Zh request are fully equivalent to Cx MAR  
 example: ./Cx.py MAR 250009999999999 1234567 AKA
