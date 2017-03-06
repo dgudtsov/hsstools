@@ -79,18 +79,18 @@ import xml.dom.minidom
 ########## HELP OUTPUT ###########
 
 HELP = """
-Format: {APP_NAME} COMMAND IMSI MSISDN DATA
+Format: {APP_NAME} COMMAND MSISDN DATA
 COMMAND: one of UDR, PUR, SNR
 MSISDN: msisdn of the subscriber, without +
 DATA: Data-reference name OR Service-Indicator name of repository data
 DATA possible values are: {UDR}
 Examples:
 - to read data
-example: {APP_NAME} UDR 250000000000000 79999999999 MMTEL-Services
-example: {APP_NAME} UDR 250000000000000 79999999999 MMTEL-Services,IMS-CAMEL-Services
-example: {APP_NAME} UDR 250000000000000 79999999999 ALL
-example: {APP_NAME} UDR 250000000000000 79999999999 Location
-example: {APP_NAME} UDR 250000000000000 79999999999 TADS
+example: {APP_NAME} UDR 79999999999 MMTEL-Services
+example: {APP_NAME} UDR 79999999999 MMTEL-Services,IMS-CAMEL-Services
+example: {APP_NAME} UDR 79999999999 ALL
+example: {APP_NAME} UDR 79999999999 Location
+example: {APP_NAME} UDR 79999999999 TADS
 ALL means: {ALL_SI}
 - to update data
 example: {APP_NAME} PUR 250000000000000 79999999999 MMTEL-Services
