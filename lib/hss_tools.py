@@ -2,7 +2,7 @@
 # HSS Tools module
 
 ##################################################################
-# Copyright (c) 2015-2016 Denis Gudtsov
+# Copyright (c) 2015-2017 Denis Gudtsov
 # License - GPL
 # https://github.com/dgudtsov/hsstools
 #
@@ -104,7 +104,7 @@ diam_exp_error_codes = {
 }
 
 auth_types = {
-    'SIP':'SIP-Digest',
+    'SIP':'SIP Digest',
     'AKA':'Digest-AKAv1-MD5',
     'NONE':'',
     "Unknown":"Unknown"
