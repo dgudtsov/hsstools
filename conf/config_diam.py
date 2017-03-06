@@ -6,15 +6,13 @@ pyprotosim_lib_path = "./pyprotosim"
 # where dictDiameter.xml and other dict*.xml is stored
 pyprotosim_dict_path = pyprotosim_lib_path
 
-# parameter for Sh interface connetion
-Sh_params={
-
-    # DRA/HSS peer to connect
-    "HOST":"10.10.10.10",
+Common_params = {
+           # DRA/HSS peer to connect
+    "HOST":"10.0.0.0",
     "PORT":3868,
 
     # SRC address to use (host where script is running)
-    "SRC_HOST":"10.10.10.11",
+    "SRC_HOST":"10.0.0.0",
     "SRC_PORT":3868,
 
     # diameter params
@@ -22,18 +20,8 @@ Sh_params={
     "ORIGIN_REALM":"ims.mnc000.mcc000.3gppnetwork.org",
 
     # if HSS behind DRA, then dest_host shouldn't be used
-#    "DEST_HOST":"hss.ims.mnc000.mcc000.3gppnetwork.org",
+#    "DEST_HOST":"hss11.ims.mnc000.mcc000.3gppnetwork.org",
     "DEST_REALM":"ims.mnc000.mcc000.3gppnetwork.org",
-
-    # Sh App Id
-    "APPLICATION_ID":16777217,
-    "VENDOR_ID":10415,
-    "Product_Name":"AS",
-    #3GPP Vendor id
-    "Supported_Vendor_Id":10415,
-
-    # HSS Notif-Eff support - not supported yet
-    "NotifEff":False,
 
     # is used to construct public identity in requests
     "IMPU_domain":"@ims.mnc000.mcc000.3gppnetwork.org",
@@ -41,8 +29,41 @@ Sh_params={
 
     # template how full IMPU & IMPI should be constructed
     "IMPU_format": "sip:+{IDENTITY}{IMPU_domain}",
-    "IMPI_format": "{IDENTITY}{IMPI_domain}"
-}
+    "IMPI_format": "{IDENTITY}{IMPI_domain}",
+    "TEL_format":"tel:+{IDENTITY}"          
+                 
+                 }
+
+Sh_params = Common_params.copy()
+
+# parameter for Sh interface connection
+Sh_params.update ( {
+
+# you can also customize host/port here
+
+#                    "HOST":"10.2.26.210",
+#                    "PORT":3866,
+#                    "SRC_HOST":"10.2.26.254",
+#                    "SRC_PORT":3868,
+
+                    # Sh App Id
+                    "APPLICATION_ID":16777217,
+                    "VENDOR_ID":10415,
+                    "Product_Name":"TAS",
+                    #3GPP Vendor id
+                    "Supported_Vendor_Id":10415,
+                
+                    # HSS Notif-Eff support - not supported yet
+#                    "NotifEff":False,
+                
+                
+                # CMD dict defines command-line parameter and corresponding diameter CMD
+                    "CMD" : {
+                             "UDR":"User-Data",
+                             "SNR":"Subscribe-Notifications",
+                             "PUR":"Profile-Update"
+                    }
+                    })
 
 # make a copy of Sh options for Cx
 Cx_params=Sh_params.copy()
@@ -51,28 +72,45 @@ Cx_params=Sh_params.copy()
 Zh_params=Cx_params.copy()
 
 # customize it
-Cx_params["APPLICATION_ID"]=16777216
-Cx_params["VENDOR_ID"]=10415
-
-Cx_params["SRC_HOST"] = "10.10.10.11"
-Cx_params["PORT"] = 3869
-Cx_params["ORIGIN_HOST"] = "scscf.ims.mnc000.mcc000.3gppnetwork.org"
-Cx_params["Server-Name"] = "sip:scscf.ims.mnc000.mcc000.3gppnetwork.org:5070"
+# remove dest_host if defined in Sh
 #Cx_params.pop("DEST_HOST")
+Cx_params.update( {
+                   "APPLICATION_ID":16777216,
+                   "VENDOR_ID":10415,
+#                    "SRC_HOST": "10.0.0.0",
+#                    "PORT": 3868,
+#                    "ORIGIN_HOST": "scscf.ims.mnc000.mcc000.3gppnetwork.org",
+                    "Server-Name":"sip:scscf.ims.mnc000.mcc000.3gppnetwork.org:5070",
 
+# CMD dict defines command-line parameter and corresponding diameter CMD
+                    "CMD": {
+                            "MAR":"Multimedia-Auth",
+                            "SAR":"Server-Assignment",
+                            "LIR":"Location-Info",
+                            "UAR":"User-Authorization"
+                            }
+                   } )
 
 # customize it
-Zh_params["APPLICATION_ID"]=16777221
-Zh_params["VENDOR_ID"]=10415
-Zh_params["SRC_HOST"] = "10.10.10.11"
-Zh_params["ORIGIN_HOST"] = "bsf.ims.mnc000.mcc000.3gppnetwork.org"
+
 #Zh_params.pop("DEST_HOST")
 
 # delete Server-Name AVP from Zh params
 #Zh_params.pop("Server-Name")
-# OR redefine it
-Zh_params["Server-Name"] = "agw"
+# OR redefine it below
 
+Zh_params.update ( { 
+                    "APPLICATION_ID":16777221,
+                    "VENDOR_ID":10415,
+                    "ORIGIN_HOST":"bsf.ims.mnc000.mcc000.3gppnetwork.org",
+                    "Server-Name":"agw.ims.tele2.ru",
+
+# CMD dict defines command-line parameter and corresponding diameter CMD
+                    "CMD": {
+                            "MAR":"Multimedia-Auth"
+                            }
+
+                    })
 
 conn_params={
     "Sh":Sh_params,
@@ -83,7 +121,7 @@ conn_params={
 # list equivalent to ALL alias
 ALL_SI_items = 'MMTEL-Services,IMS-ODB-Information,IMS-CAMEL-Services,MMTEL-Custom-Services,CM_SUBPROFILE,RMS_DYNAMIC_DATA'
 
-# definition of all supported data-references
+# definition of all supported data-references for Sh
 # all items exept last one must be list of dict!
 # you can extend this array by defining other Data-References
 # according to 3GPP TS 29.328 table 7.6.1
@@ -168,17 +206,64 @@ SNR_Template = {
 
 ##### Cx
 
-MAR_Template={
-    "3GPP-SIP-Number-Auth-Items" : 1
-}
+# {IMPU}
+# {TEL}
+# {IMPI}
+# "User-Name" : "IMPI"
+# "Public-Identity" : "IMPU"
+# "Public-Identity" : "sip:IMPI"
 
-SAR_Template={
-    "3GPP-SIP-Number-Auth-Items" : 1
-    # REGISTRATION (1)
-    ,"Server-Assignment-Type" : 1
-    # USER_DATA_NOT_AVAILABLE (0)
-    ,"User-Data-Already-Available" : 0
-}
+Templates_Cx = {
+               "MAR": {
+                       "3GPP-SIP-Number-Auth-Items" : 1
+                       ,"Public-Identity" : "{IMPU}"
+#                       "Public-Identity" : "{TEL}",
+                       ,"User-Name" : "{IMPI}"                       
+                       },
+               
+               "SAR": {
+                        "3GPP-SIP-Number-Auth-Items" : 1
+                    # REGISTRATION (1)
+                        ,"Server-Assignment-Type" : 1
+                    # USER_DATA_NOT_AVAILABLE (0)
+                        ,"User-Data-Already-Available" : 0
+                        ,"Public-Identity" : "{IMPU}"
+#                       "Public-Identity" : "{TEL}",
+                       ,"User-Name" : "{IMPI}"
+                       },
+               
+               "LIR": {
+                       "Public-Identity" : "{IMPU}",
+#                       "Public-Identity" : "{TEL}",
+                       "User-Name" : "{IMPI}"
+                       },
+                
+                "UAR": {
+                       "Public-Identity" : "{IMPU}",
+                       "User-Name" : "{IMPI}",
+                       "Visited-Network-Identifier" : "ims.mnc000.mcc000.3gppnetwork.org",
+                       # 0 -REGISTRATION
+                       "User-Authorization-Type" : 0                        
+                        }
+               }
+
+# Zh
+Templates_Zh = {
+                "MAR": {
+                       "3GPP-SIP-Number-Auth-Items" : 1
+                       ,"Public-Identity" : "{IMPU}"
+                       ,"User-Name" : "{IMPI}"                       
+                       }
+                }
+
+Templates = {
+             "Cx": Templates_Cx,
+             "Sh": {
+                   "UDR":UDR_Template,
+                   "SNR":SNR_Template
+                   },
+             "Zh": Templates_Zh
+             }
 
 SAR_FileName = "SAR_UD"
 

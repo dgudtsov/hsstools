@@ -12,7 +12,10 @@
 
 from config_diam import *
 
+from location_decoder import *
+
 import logging
+
 hss_logger = logging.getLogger('hss_tools.aux')
 
 import os
@@ -26,7 +29,9 @@ import xml.dom.minidom
 sys.path.append(pyprotosim_lib_path)
 from libDiameter import *
 
-DIAM_OK_CODE = [2001]
+DIAM_OK_CODE = [2001,2002]
+
+DIAM_EXP_OK_CODE = [0,2001,2002,2003,2004]
 
 diam_error_codes = {
 2002:"DIAMETER_LIMITED_SUCCESS",
@@ -63,6 +68,10 @@ diam_error_codes = {
 }
 
 diam_exp_error_codes = {
+2001:"DIAMETER_FIRST_REGISTRATION",                        
+2002:"DIAMETER_SUBSEQUENT_REGISTRATION",                        
+2003:"DIAMETER_UNREGISTERED_SERVICE",
+2004:"DIAMETER_SUCCESS_SERVER_NAME_NOT_STORED",
 4100:"DIAMETER_USER_DATA_NOT_AVAILABLE",
 4101:"DIAMETER_PRIOR_UPDATE_IN_PROGRESS",
 4181:"DIAMETER_AUTHENTICATION_DATA_UNAVAILABLE",
@@ -97,243 +106,509 @@ diam_exp_error_codes = {
 auth_types = {
     'SIP':'SIP-Digest',
     'AKA':'Digest-AKAv1-MD5',
-    'NONE':''
+    'NONE':'',
+    "Unknown":"Unknown"
 }
 
-def HSS_Connect(host,port,srchost,srcport):
-    # Create a socket (SOCK_STREAM means a TCP socket)
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((srchost, srcport))
-        sock.connect((host, port))
-        return sock
-    except:
-        hss_logger.error("Error in HSS Connect: %s",sys.exc_info())
-        return None
+class Diam_request(object):
+    
+    REQ_AVP = dict()
+    SESSION_ID=""
+    CMD=None
 
-def dump_Payload(avps):
-    for avp in avps:
-        hss_logger.debug('decoding AVP: %s',avp)
-        (name,value)=decodeAVP(avp)
-        if name=='EAP-Payload':
-            hss_logger.debug( 'Response: %s = %s',name,value.encode('hex'))
-            E=eap.decode_EAP(value.encode('hex'))
-            for eavp in E.avps:
-                (code,data)=eavp
-                hss_logger.debug("%s = %s", code,data)
-        else:
-                hss_logger.debug("%s = %s", name, value)
+    def __init__(self,act,OPT,AVPs,IMPU=None,IMPI=None,TEL=None):
+        self.CMD = act
+        
+        # todo: remove from here and add AVP into constructor parameter
+#        self.REQ_AVP = Templates_Cx[self.CMD].copy()
+        self.REQ_AVP = AVPs
+          
+        if act == "MAR" :
+#            self.REQ_AVP=MAR_Template.copy()
+            # add auth scheme if required
+            if (OPT in auth_types) & (auth_types[OPT]!=""):
+                auth_AVP = [encodeAVP("3GPP-SIP-Authentication-Scheme",auth_types[OPT])]
+                self.REQ_AVP["3GPP-SIP-Auth-Data-Item"] = auth_AVP
+    
 
-def dump_Cx_response(avps):
-    for avp in avps:
-        hss_logger.debug('decoding AVP: %s',avp)
-        (name,value)=decodeAVP(avp)
-        if name in ["3GPP-SIP-Auth-Data-Item"]:
-            hss_logger.info("%s = %s", name, value)
-
-def create_Session_Id(ORIGIN_HOST,IDENTITY):
+        for avp,value in self.REQ_AVP.iteritems():
+            if type(value) is str:            
+                self.REQ_AVP[avp]=value.format(IMPI=IMPI,IMPU=IMPU,TEL=TEL)    
+    
+        return
+    
+    
+    def create_Session_Id(self,ORIGIN_HOST,IDENTITY):
     #The Session-Id MUST be globally and eternally unique
     #<DiameterIdentity>;<high 32 bits>;<low 32 bits>[;<optional value>]
-    now=datetime.datetime.now()
-    ret=ORIGIN_HOST+";"
-    ret=ret+str(now.year)[2:4]+"%02d"%now.month+"%02d"%now.day
-    ret=ret+"%02d"%now.hour+"%02d"%now.minute+";"
-    ret=ret+"%02d"%now.second+str(now.microsecond)+";"
-    ret=ret+IDENTITY[2:16]
-    return ret
+        now=datetime.datetime.now()
+        ret=ORIGIN_HOST+";"
+        ret=ret+str(now.year)[2:4]+"%02d"%now.month+"%02d"%now.day
+        ret=ret+"%02d"%now.hour+"%02d"%now.minute+";"
+        ret=ret+"%02d"%now.second+str(now.microsecond)+";"
+        ret=ret+IDENTITY[2:16]
+        self.SESSION_ID = ret
+        return
+    
+#    def create_REQ(self,params,SESSION_ID,AVP):
+    def create_REQ(self,params):
 
-def create_CER(params):
-    # params - dict (like Sh_params)
-    # Let's build CER
-    CER_avps=[]
-    CER_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
-    CER_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
-    CER_avps.append(encodeAVP('Host-IP-Address', params["SRC_HOST"]))
-    CER_avps.append(encodeAVP('Vendor-Id', params["VENDOR_ID"]))
-    CER_avps.append(encodeAVP('Product-Name', params["Product_Name"]))
-    CER_avps.append(encodeAVP('Origin-State-Id', 0))
-    CER_avps.append(encodeAVP('Supported-Vendor-Id', params["Supported_Vendor_Id"]))
-    CER_avps.append(encodeAVP('Auth-Application-Id', params["APPLICATION_ID"]))
-    CER_avps.append(encodeAVP('Inband-Security-Id', 0))
-    CER_avps.append(encodeAVP("Vendor-Specific-Application-Id",[
-             encodeAVP("Vendor-Id",params["VENDOR_ID"]),
+        REQ_avps=[]
+        REQ_avps.append(encodeAVP("Session-Id", self.SESSION_ID))
+    
+        if "DEST_HOST" in params:  REQ_avps.append(encodeAVP("Destination-Host", params["DEST_HOST"]))
+        if "DEST_REALM" in params: REQ_avps.append(encodeAVP("Destination-Realm", params["DEST_REALM"]))
+    
+    # some requests requires MSISDN instead of public-identity, currently not
+    # supported
+    #    REQ_avps.append(encodeAVP("User-Identity", [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]))
+    #    REQ_avps.append(encodeAVP("Public-Identity", PRIVATE_IDENTITY))
+    
+        # 1 - NO_STATE_MAINTAINED
+        REQ_avps.append(encodeAVP("Auth-Session-State", 1))
+        # Grouped AVPs are encoded like this
+        REQ_avps.append(encodeAVP("Vendor-Specific-Application-Id",[
+            encodeAVP("Vendor-Id",params["VENDOR_ID"]),
             encodeAVP("Auth-Application-Id",params["APPLICATION_ID"])]))
-    CER_avps.append(encodeAVP('Firmware-Revision',1))
+        REQ_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
+        REQ_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
+    
+        for key,value in self.REQ_AVP.iteritems():
+            REQ_avps.append(encodeAVP(key, value))
+    
+        hss_logger.debug("REQ_avps: %s", REQ_avps)
+        self.dump_Payload(REQ_avps)
+    #    logger.debug ("REQ AVPs %s",REQ_avps)
+        # Create message header (empty)
+        REQ=HDRItem()
+        # Set command code
+    #    REQ.cmd=dictCOMMANDname2code("User-Data")
 
-    hss_logger.debug("CER AVP: %s", CER_avps)
-    dump_Payload(CER_avps)
+        REQ.cmd=dictCOMMANDname2code(params["CMD"][self.CMD])
+        # Set Application-Id
+        REQ.appId=params["APPLICATION_ID"]
+        # Set Hop-by-Hop and End-to-End
+        initializeHops(REQ)
+        # Set Proxyable flag
+        setFlags(REQ,DIAMETER_HDR_PROXIABLE)
+        # Add AVPs to header and calculate remaining fields
+        msg=createReq(REQ,REQ_avps)
+        # msg now contains MAR Request as hex string
+        self.msg = msg
+        return
 
-    # Create message header (empty)
-    CER=HDRItem()
-    # Set command code
-    CER.cmd=dictCOMMANDname2code("Capabilities-Exchange")
-    # Set Hop-by-Hop and End-to-End
-    initializeHops(CER)
-    # Add AVPs to header and calculate remaining fields
-    msg=createReq(CER,CER_avps)
-    # msg now contains CER Request as hex string
-    return msg
+    def dump_Payload(self,avps):
+        for avp in avps:
+            hss_logger.debug('decoding AVP: %s',avp)
+            (name,value)=decodeAVP(avp)
+            if name!='EAP-Payload':
+                    hss_logger.debug("%s = %s", name, value)
 
-def create_DPR(params):
-    # Let's build DPR
-    DPR_avps=[]
-    DPR_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
-    DPR_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
-    DPR_avps.append(encodeAVP('Host-IP-Address', params["SRC_HOST"]))
-    DPR_avps.append(encodeAVP('Vendor-Id', params["VENDOR_ID"]))
-    DPR_avps.append(encodeAVP('Disconnect-Cause', 'DO_NOT_WANT_TO_TALK_TO_YOU'))
+class Diam_response(object):
+    
+    result_AVPs=None
+    result_code = 0
+    result_descr = ""
+    exp_result_code = 0
+    exp_result_descr =""
+    
+    def __init__(self,result):
+        self.result_AVPs = result 
+        
+    def get_result_code(self):
+        self.result_code=findAVP("Result-Code",self.result_AVPs)
+        return self.result_code
+        
+    def get_exp_result_code(self):
 
-    # Create message header (empty)
-    DPR=HDRItem()
-    # Set command code
-    DPR.cmd=dictCOMMANDname2code("Disconnect-Peer")
-    # Set Hop-by-Hop and End-to-End
-    initializeHops(DPR)
-    # Add AVPs to header and calculate remaining fields
-    msg=createReq(DPR,DPR_avps)
-    # msg now contains CER Request as hex string
-    return msg
+        exp_result_AVP = findAVP("Experimental-Result",self.result_AVPs)
+        if exp_result_AVP != -1:
+            exp_result = dict(exp_result_AVP)
+            
+            self.exp_result_code = exp_result['Experimental-Result-Code']
+        return self.exp_result_code
+    
+#            hss_logger.warning ("RES exp result code: %s %s",exp_result_code,exp_result_descr)
+           
+    def get_exp_result_descr(self):
+        self.exp_result_descr = diam_exp_error_codes.get(self.exp_result_code,"")
+        return self.exp_result_descr
+    
+    def get_result_descr(self):
+        self.result_descr = diam_error_codes.get(self.result_code,"")
+        return self.result_descr
+    
+    def get_Cx_server_name(self):
+        server_name=""
+#        print self.result_code
+#        print self.exp_result_code        
+        if (self.result_code>0)|(self.exp_result_code in DIAM_EXP_OK_CODE):
+            server_name=findAVP("Server-Name",self.result_AVPs)
+        else:
+            serv_cap_avp=findAVP("Server-Capabilities",self.result_AVPs)
+            if serv_cap_avp != -1:
+                serv_cap = dict(serv_cap_avp)
+                server_name=serv_cap["Server-Name"]
+        return server_name
+        
+# returns Result-Code if any
+    def print_result(self):
+        result_code=findAVP("Result-Code",self.result_AVPs)
+        if result_code != -1:
+            result_descr=""
+            if result_code in diam_error_codes: result_descr=diam_error_codes[result_code]
+            hss_logger.info ("RES result code: %s %s", result_code, result_descr)
+    
+            if result_code in DIAM_OK_CODE:
+                hss_logger.debug("DIAM_OK!")
+    
+    # result code is present, returning it
+            return result_code
+        else:
+            exp_result_AVP = findAVP("Experimental-Result",self.result_AVPs)
+            if exp_result_AVP != -1:
+                exp_result = dict(exp_result_AVP)
+                exp_result_code = exp_result['Experimental-Result-Code']
+    
+                exp_result_descr=""
+                if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
+                hss_logger.warning ("RES exp result code: %s %s",exp_result_code,exp_result_descr)
+    
+    # result-code doesn't exist, return nothing
+        return
+    
+    def parse_result(self):
+        hss_logger.debug("Result AVP: %s", self.result_AVPs)
+        self.dump_Payload()
+        exp_result_code = 0
+    
+        try:
+            exp_result_AVP = findAVP("Experimental-Result",self.result_AVPs)
+            if exp_result_AVP != -1:
+                exp_result = dict(exp_result_AVP)
+                exp_result_code = exp_result['Experimental-Result-Code']
+        except:
+            hss_logger.error ("UDA no exp result")
+        else:
+            exp_result_descr=""
+            if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
+            hss_logger.info ("UDA exp result code: %s %s",exp_result_code,exp_result_descr)
+    
+        try:
+            user_data=findAVP("3GPP-User-Data",self.result_AVPs)
+            if user_data == -1:
+                user_data=findAVP("User-Data",self.result_AVPs)
+                if user_data == -1:
+                    hss_logger.error ("no userdata")
+                    return -1
+    
+        except:
+            hss_logger.error ("no userdata")
+            return -1
+        else:
+            # remove xml formating
+            user_data = user_data.replace('\n', '').replace('\r', '')
+            hss_logger.debug ("User-Data:\n%s",user_data)
+            return user_data
 
-def diam_connect(Conn,params):
-    ###########################################################
-    # Let's build CER
-    msg=create_CER(params)
-    # msg now contains CER Request as hex string
-#    logger.debug("+"*30)
+    def dump_Cx_response(self):
+        for avp in self.result_AVPs:
+            hss_logger.debug('decoding AVP: %s',avp)
+            (name,value)=decodeAVP(avp)
+            if name in ["3GPP-SIP-Auth-Data-Item"]:
+                hss_logger.info("%s = %s", name, value)
+    
+    
+    def dump_Payload(self):
+        for avp in self.result_AVPs:
+            hss_logger.debug('decoding AVP: %s',avp)
+            (name,value)=decodeAVP(avp)
+            if name!='EAP-Payload':
+                    hss_logger.debug("%s = %s", name, value)
+    
 
-    try:
+class Diam_userdata(object):
+    
+    user_data = None
+    xml_dom = None
+    
+    def __init__(self,user_data):
+        self.user_data = user_data
+        return
+    
+    def print_pretty_xml(self):
+        hss_logger.info("Printing pretty XML:")
+        try:
+            xml_dom=xml.dom.minidom.parseString(self.user_data)
+            pretty_xml=xml_dom.toprettyxml(indent=" "*2)
+    #        pretty_xml=xml_dom.toprettyxml()
+            hss_logger.info( pretty_xml )
+            # check that xml contains CS Location information inside
+            if (xml_dom.getElementsByTagName("CSLocationInformation")):
+                hss_logger.info( "cs location decoding")
+
+                L = Location(xml_dom)                
+                L.loc_dump()
+
+    
+            xml_dom.unlink()
+        except:
+            hss_logger.error("can't pretty format xml %s",sys.exc_info())
+        return
+
+    def save_xml_file(self,filename):
+    
+        full_filename = DATA_FILE.format(SI = filename)
+    
+        try:
+            file_target = open(full_filename, 'w')
+            file_target.write(self.user_data)
+            file_target.close()
+            hss_logger.info ("file updated")
+        except:
+            hss_logger.error ("filed to write into %s",filename)
+        return
+    
+    # read XML and returns xml.dom object
+    # stores xml_dom object into self
+    def read_xml_file(self,filename):
+    
+        full_filename = DATA_FILE.format(SI = filename)
+    
+        try:
+            xml_dom=xml.dom.minidom.parse(full_filename)
+        except:
+            hss_logger.error ("failed to parse xml from file %s : %s",filename,sys.exc_info())
+            return None
+        self.xml_dom = xml_dom
+        return True
+
+    def xml_get_seq(self):
+        xml_dom=xml.dom.minidom.parseString(self.user_data)
+        seq=xml_dom.getElementsByTagName("SequenceNumber")[0].firstChild.nodeValue
+        return int(seq)
+    
+# takes xml.dom object and updates Node with new seq value
+# returns string
+    def xml_update_seq(self,seq):
+        self.xml_dom.getElementsByTagName("SequenceNumber")[0].firstChild.nodeValue=seq
+        return self.xml_dom.toxml()
+    
+    def dump(self):
+        return self.xml_dom.toxml().replace('\n','')
+
+class HSS(object):
+    
+    sock=None
+    
+    params=dict()
+    
+    def __init__(self,params):
+            # Create a socket (SOCK_STREAM means a TCP socket)
+        
+        self.params = params
+        
+        host = params["HOST"]
+        port = params["PORT"]
+        src_host = params.get("SRC_HOST",None)
+        src_port = params.get("SRC_PORT",None)
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if ((src_host!=None) & (src_port!=None)):
+                sock.bind((src_host, src_port))
+            sock.connect((host, port))
+            self.sock = sock
+        except:
+            hss_logger.error("Error in HSS Connect: %s",sys.exc_info())
+            return 1
+        return
+    
+    def connect(self):
+   
+        ###########################################################
+        # Let's build CER
+        msg=self.create_CER(self.params)
+        # msg now contains CER Request as hex string
+    #    logger.debug("+"*30)
+    
+        try:
+            # send data
+            self.sock.send(msg.decode("hex"))
+            # Receive response
+            received = self.sock.recv(MSG_SIZE)
+        except:
+            hss_logger.error("diam connection exception: %s",sys.exc_info())
+            return None
+    
+    
+        # split header and AVPs
+        CEA=HDRItem()
+        stripHdr(CEA,received.encode("hex"))
+        # From CEA we needed Destination-Host and Destination-Realm
+        Capabilities_avps=splitMsgAVPs(CEA.msg)
+    #    logger.debug ("CEA %s",Capabilities_avps)
+        result_code=findAVP("Result-Code",Capabilities_avps)
+        result_descr=""
+        if result_code in diam_error_codes:
+            result_descr=diam_error_codes[result_code]
+    #    logger.info ("CEA result code: %s %s", result_code, result_descr)
+        hss_logger.info("CEA result code: %s %s", result_code,result_descr)
+        prod_name = findAVP("Product-Name",Capabilities_avps)
+        vendor = findAVP("Vendor-Id",Capabilities_avps)
+    
+    #    vendor_app_id = findAVP("Vendor-Specific-Application-Id",Capabilities_avps)
+    #    auth_app_id = findAVP("Auth-Application-Id",vendor_app_id)
+    
+#        test = findAVP("TEST",Capabilities_avps)
+    
+        if (prod_name) : hss_logger.info ("Product-Name: %s",prod_name)
+        if (vendor) : hss_logger.info ("Vendor: %s",vendor)
+    #    if (auth_app_id): hss_logger.info ("App id: %s",auth_app_id)
+    
+        hss_logger.debug("Capabilities AVP: %s", Capabilities_avps)
+        self.dump_Payload(Capabilities_avps)
+    
+        return result_code   
+   
+    
+    def create_CER(self,params):
+        # params - dict (like Sh_params)
+        # Let's build CER
+        CER_avps=[]
+        CER_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
+        CER_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
+        CER_avps.append(encodeAVP('Host-IP-Address', params["SRC_HOST"]))
+        CER_avps.append(encodeAVP('Vendor-Id', params["VENDOR_ID"]))
+        CER_avps.append(encodeAVP('Product-Name', params["Product_Name"]))
+        CER_avps.append(encodeAVP('Origin-State-Id', 0))
+        CER_avps.append(encodeAVP('Supported-Vendor-Id', params["Supported_Vendor_Id"]))
+        CER_avps.append(encodeAVP('Auth-Application-Id', params["APPLICATION_ID"]))
+        CER_avps.append(encodeAVP('Inband-Security-Id', 0))
+        CER_avps.append(encodeAVP("Vendor-Specific-Application-Id",[
+                 encodeAVP("Vendor-Id",params["VENDOR_ID"]),
+                encodeAVP("Auth-Application-Id",params["APPLICATION_ID"])]))
+        CER_avps.append(encodeAVP('Firmware-Revision',1))
+    
+        hss_logger.debug("CER AVP: %s", CER_avps)
+        
+        self.dump_Payload(CER_avps)
+    
+        # Create message header (empty)
+        CER=HDRItem()
+        # Set command code
+        CER.cmd=dictCOMMANDname2code("Capabilities-Exchange")
+        # Set Hop-by-Hop and End-to-End
+        initializeHops(CER)
+        # Add AVPs to header and calculate remaining fields
+        msg=createReq(CER,CER_avps)
+        # msg now contains CER Request as hex string
+        return msg       
+
+    def create_DPR(self,params):
+        # Let's build DPR
+        DPR_avps=[]
+        DPR_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
+        DPR_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
+        DPR_avps.append(encodeAVP('Host-IP-Address', params["SRC_HOST"]))
+        DPR_avps.append(encodeAVP('Vendor-Id', params["VENDOR_ID"]))
+        DPR_avps.append(encodeAVP('Disconnect-Cause', 'DO_NOT_WANT_TO_TALK_TO_YOU'))
+    
+        # Create message header (empty)
+        DPR=HDRItem()
+        # Set command code
+        DPR.cmd=dictCOMMANDname2code("Disconnect-Peer")
+        # Set Hop-by-Hop and End-to-End
+        initializeHops(DPR)
+        # Add AVPs to header and calculate remaining fields
+        msg=createReq(DPR,DPR_avps)
+        # msg now contains CER Request as hex string
+        return msg
+
+    def diam_retrive(self,Diam_request):
+    
+        result_AVPs=self.diam_exec_req(Diam_request)
+        
+        response = Diam_response(result_AVPs)
+    
+        result_code=findAVP("Result-Code",result_AVPs)
+        result_descr=""
+        if result_code in diam_error_codes: result_descr=diam_error_codes[result_code]
+        hss_logger.info ("RES result code: %s %s", result_code, result_descr)
+        
+        user_data = -1
+        if result_code in DIAM_OK_CODE:
+#        user_data=parse_result(result_AVPs)
+            user_data = response.parse_result()
+    
+        return user_data
+
+    def diam_exec_req(self,Diam_request):
+    
+    #    logger.debug("+"*30)
+    
+        try:
+            # send data
+            self.sock.send(Diam_request.msg.decode("hex"))
+        except:
+            hss_logger.error("diam connection exception: %s",sys.exc_info())
+            return None
+    
+        # give a chance to HSS
+        time.sleep(0.5)
+    
+        try:
+            # Receive response
+            received = self.sock.recv(MSG_SIZE)
+        except:
+            hss_logger.error("diam connection exception: %s",sys.exc_info())
+            return None
+    
+        #response
+        RES=HDRItem()
+        stripHdr(RES,received.encode("hex"))
+    
+        result_AVPs=splitMsgAVPs(RES.msg)
+    
+        cmd = dictCOMMANDcode2name(RES.flags, RES.cmd)
+        hss_logger.debug("CMD code: %s", cmd)
+    
+    #    hss_logger.debug ("RES AVPs %s",result_AVPs)
+        return result_AVPs
+
+    def disconnect(self,params):
+        ###########################################################
+    #    logger.info("Disconnecting from peer")
+        # Let's build DPR
+        msg=self.create_DPR(params)
+        # msg now contains DPR Request as hex string
+    #    logger.debug("+"*30)
         # send data
-        Conn.send(msg.decode("hex"))
+        self.sock.send(msg.decode("hex"))
         # Receive response
-        received = Conn.recv(MSG_SIZE)
-    except:
-        hss_logger.error("diam connection exception: %s",sys.exc_info())
-        return None
+        received = self.sock.recv(MSG_SIZE)
+        # split header and AVPs
+        DPA=HDRItem()
+        stripHdr(DPA,received.encode("hex"))
+    
+        avps=splitMsgAVPs(DPA.msg)
+    #    logger.debug ("DPA %s",avps)
+        result_code_dpa=findAVP("Result-Code",avps)
+    #    logger.info ("DPA result code: %s",result_code_dpa)
+    # And close the connection
+        self.sock.close()
+        return
+
+    def dump_Payload(self,avps):
+        for avp in avps:
+            hss_logger.debug('decoding AVP: %s',avp)
+            (name,value)=decodeAVP(avp)
+            if name!='EAP-Payload':
+                    hss_logger.debug("%s = %s", name, value)
 
 
-    # split header and AVPs
-    CEA=HDRItem()
-    stripHdr(CEA,received.encode("hex"))
-    # From CEA we needed Destination-Host and Destination-Realm
-    Capabilities_avps=splitMsgAVPs(CEA.msg)
-#    logger.debug ("CEA %s",Capabilities_avps)
-    result_code=findAVP("Result-Code",Capabilities_avps)
-    result_descr=""
-    if result_code in diam_error_codes:
-        result_descr=diam_error_codes[result_code]
-#    logger.info ("CEA result code: %s %s", result_code, result_descr)
-    hss_logger.info("CEA result code: %s %s", result_code,result_descr)
-    prod_name = findAVP("Product-Name",Capabilities_avps)
-    vendor = findAVP("Vendor-Id",Capabilities_avps)
 
-#    vendor_app_id = findAVP("Vendor-Specific-Application-Id",Capabilities_avps)
-#    auth_app_id = findAVP("Auth-Application-Id",vendor_app_id)
-
-    test = findAVP("TEST",Capabilities_avps)
-
-    if (prod_name) : hss_logger.info ("Product-Name: %s",prod_name)
-    if (vendor) : hss_logger.info ("Vendor: %s",vendor)
-#    if (auth_app_id): hss_logger.info ("App id: %s",auth_app_id)
-
-    hss_logger.debug("Capabilities AVP: %s", Capabilities_avps)
-    dump_Payload(Capabilities_avps)
-
-    return result_code
-
-def diam_disconnect(Conn,params):
-    ###########################################################
-#    logger.info("Disconnecting from peer")
-    # Let's build DPR
-    msg=create_DPR(params)
-    # msg now contains DPR Request as hex string
-#    logger.debug("+"*30)
-    # send data
-    Conn.send(msg.decode("hex"))
-    # Receive response
-    received = Conn.recv(MSG_SIZE)
-    # split header and AVPs
-    DPA=HDRItem()
-    stripHdr(DPA,received.encode("hex"))
-
-    avps=splitMsgAVPs(DPA.msg)
-#    logger.debug ("DPA %s",avps)
-    result_code_dpa=findAVP("Result-Code",avps)
-#    logger.info ("DPA result code: %s",result_code_dpa)
-    return
-
-
-#def create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-def create_UDR(params,SESSION_ID,AVP):
-# some requests requires MSISDN instead of public-identity, currently not
-# supported
-#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
-    return create_REQ(params,SESSION_ID,AVP,"User-Data")
-
-#def create_PUR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-def create_PUR(params,SESSION_ID,AVP):
-# some requests requires MSISDN instead of public-identity, currently not
-# supported
-#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
-    return create_REQ(params,SESSION_ID,AVP,"Profile-Update")
-
-#def create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,AVP):
-def create_SNR(params,SESSION_ID,AVP):
-# some requests requires MSISDN instead of public-identity, currently not
-# supported
-#    AVP["User-Identity"] = [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]
-    return create_REQ(params,SESSION_ID,AVP,"Subscribe-Notifications")
-
-def create_MAR(params,SESSION_ID,AVP):
-    return create_REQ(params,SESSION_ID,AVP,"Multimedia-Auth")
-
-def create_SAR(params,SESSION_ID,AVP):
-    return create_REQ(params,SESSION_ID,AVP,"Server-Assignment")
-
-#def create_REQ(params,SESSION_ID,PUBLIC_IDENTITY,AVP,CMD):
-def create_REQ(params,SESSION_ID,AVP,CMD):
-
-    REQ_avps=[]
-    REQ_avps.append(encodeAVP("Session-Id", SESSION_ID))
-
-    if "DEST_HOST" in params:  REQ_avps.append(encodeAVP("Destination-Host", params["DEST_HOST"]))
-    if "DEST_REALM" in params: REQ_avps.append(encodeAVP("Destination-Realm", params["DEST_REALM"]))
-
-# some requests requires MSISDN instead of public-identity, currently not
-# supported
-#    REQ_avps.append(encodeAVP("User-Identity", [ encodeAVP("Public-Identity",PUBLIC_IDENTITY)]))
-#	REQ_avps.append(encodeAVP("Public-Identity", PRIVATE_IDENTITY))
-
-    # 1 - NO_STATE_MAINTAINED
-    REQ_avps.append(encodeAVP("Auth-Session-State", 1))
-    # Grouped AVPs are encoded like this
-    REQ_avps.append(encodeAVP("Vendor-Specific-Application-Id",[
-        encodeAVP("Vendor-Id",params["VENDOR_ID"]),
-        encodeAVP("Auth-Application-Id",params["APPLICATION_ID"])]))
-    REQ_avps.append(encodeAVP('Origin-Host', params["ORIGIN_HOST"]))
-    REQ_avps.append(encodeAVP('Origin-Realm', params["ORIGIN_REALM"]))
-
-    for key,value in AVP.iteritems():
-        REQ_avps.append(encodeAVP(key, value))
-
-    hss_logger.debug("REQ_avps: %s", REQ_avps)
-    dump_Payload(REQ_avps)
-#    logger.debug ("REQ AVPs %s",REQ_avps)
-    # Create message header (empty)
-    REQ=HDRItem()
-    # Set command code
-#    REQ.cmd=dictCOMMANDname2code("User-Data")
-    REQ.cmd=dictCOMMANDname2code(CMD)
-    # Set Application-Id
-    REQ.appId=params["APPLICATION_ID"]
-    # Set Hop-by-Hop and End-to-End
-    initializeHops(REQ)
-    # Set Proxyable flag
-    setFlags(REQ,DIAMETER_HDR_PROXIABLE)
-    # Add AVPs to header and calculate remaining fields
-    msg=createReq(REQ,REQ_avps)
-    # msg now contains MAR Request as hex string
-    return msg
 
 def store_pcap():
 
@@ -348,52 +623,9 @@ def store_pcap():
 #        f.write(struct.pack('!IIII',ts,tu,len(p),len(p))+p)
     return
 
-def diam_exec_req(Conn,msg):
-
-#    logger.debug("+"*30)
-
-    try:
-        # send data
-        Conn.send(msg.decode("hex"))
-    except:
-        hss_logger.error("diam connection exception: %s",sys.exc_info())
-        return None
-
-    # give a chance to HSS
-    time.sleep(0.5)
-
-    try:
-        # Receive response
-        received = Conn.recv(MSG_SIZE)
-    except:
-        hss_logger.error("diam connection exception: %s",sys.exc_info())
-        return None
-
-    #response
-    RES=HDRItem()
-    stripHdr(RES,received.encode("hex"))
-
-    result_AVPs=splitMsgAVPs(RES.msg)
-
-    cmd = dictCOMMANDcode2name(RES.flags, RES.cmd)
-    hss_logger.debug("CMD code: %s", cmd)
-
-#    hss_logger.debug ("RES AVPs %s",result_AVPs)
-    return result_AVPs
 
 #def diam_retrive(Conn,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP):
-def diam_retrive(Conn,msg):
 
-    result_AVPs=diam_exec_req(Conn,msg)
-
-    result_code=findAVP("Result-Code",result_AVPs)
-    result_descr=""
-    if result_code in diam_error_codes: result_descr=diam_error_codes[result_code]
-    hss_logger.info ("RES result code: %s %s", result_code, result_descr)
-
-    user_data=parse_result(result_AVPs)
-
-    return user_data
 
 
 # act - action (udr/pur/snr)
@@ -408,6 +640,8 @@ def diam_prefill_req(act,opt,IMPU=None,IMPI=None):
             opt = ALL_SI_items
     # check if opt parameter is in template list
     # like Location, etc...
+    
+    # if SINGLE SI
         if opt in UDR_Template:
             REQ_AVP=UDR_Template[opt]
         # add IMPU
@@ -415,6 +649,8 @@ def diam_prefill_req(act,opt,IMPU=None,IMPI=None):
 
     # if not, then request it as service-indicator
     # => Repository Data
+    
+    # in case of multiple SI
         else:
             SI_items = opt.split(',')
             hss_logger.info("SI items: %s",SI_items)
@@ -429,115 +665,12 @@ def diam_prefill_req(act,opt,IMPU=None,IMPI=None):
 
     return REQ_AVP
 
-# for Cx/Zh
-def diam_MAR_prefill_req (act,OPT,IMPU=None,IMPI=None):
-
-    REQ_AVP = {}
-
-    if act == "MAR" :
-        REQ_AVP=MAR_Template.copy()
-        # add auth scheme if required
-        if (OPT in auth_types) & (auth_types[OPT]!=""):
-            auth_AVP = [encodeAVP("3GPP-SIP-Authentication-Scheme",auth_types[OPT])]
-            REQ_AVP["3GPP-SIP-Auth-Data-Item"] = auth_AVP
-
-    elif act == "SAR" :
-        REQ_AVP=SAR_Template.copy()
-
-    if (IMPI): REQ_AVP["User-Name"] = IMPI
-    if (IMPU): REQ_AVP["Public-Identity"] = IMPU
-
-    return REQ_AVP
-
 def fill_AVP_SI(REQ_Template,SI):
     UDR_AVP=REQ_Template["RepositoryData"].copy()
     UDR_AVP["Service-Indication"]=SI
     return UDR_AVP
 
 
-def save_xml_file(filename,user_data):
 
-    full_filename = DATA_FILE.format(SI = filename)
 
-    try:
-        file_target = open(full_filename, 'w')
-        file_target.write(user_data)
-        file_target.close()
-        hss_logger.info ("file updated")
-    except:
-        hss_logger.error ("filed to write into %s",filename)
-    return
-
-# read XML and returns xml.dom object
-def read_xml_file(filename):
-
-    full_filename = DATA_FILE.format(SI = filename)
-
-    try:
-        xml_dom=xml.dom.minidom.parse(full_filename)
-    except:
-        hss_logger.error ("failed to parse xml from file %s : %s",filename,sys.exc_info())
-        return None
-    return xml_dom
-
-# returns Result-Code if any
-def print_result(result_AVPs):
-
-    result_code=findAVP("Result-Code",result_AVPs)
-    if result_code != -1:
-        result_descr=""
-        if result_code in diam_error_codes: result_descr=diam_error_codes[result_code]
-        hss_logger.info ("RES result code: %s %s", result_code, result_descr)
-
-        if result_code in DIAM_OK_CODE:
-            hss_logger.debug("DIAM_OK!")
-
-# result code is present, returning it
-        return result_code
-    else:
-        exp_result_AVP = findAVP("Experimental-Result",result_AVPs)
-        if exp_result_AVP != -1:
-            exp_result = dict(exp_result_AVP)
-            exp_result_code = exp_result['Experimental-Result-Code']
-
-            exp_result_descr=""
-            if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
-            hss_logger.warning ("RES exp result code: %s %s",exp_result_code,exp_result_descr)
-
-# result-code doesn't exist, return nothing
-    return
-
-def parse_result(result_AVPs):
-    hss_logger.debug("Result AVP: %s", result_AVPs)
-    dump_Payload(result_AVPs)
-    exp_result_code = 0
-
-    try:
-        exp_result_AVP = findAVP("Experimental-Result",result_AVPs)
-        if exp_result_AVP != -1:
-            exp_result = dict(exp_result_AVP)
-            exp_result_code = exp_result['Experimental-Result-Code']
-    except:
-        hss_logger.error ("UDA no exp result")
-    else:
-        exp_result_descr=""
-        if (exp_result_code!=0)&(exp_result_code in diam_exp_error_codes): exp_result_descr=diam_exp_error_codes[exp_result_code]
-        hss_logger.info ("UDA exp result code: %s %s",exp_result_code,exp_result_descr)
-
-    try:
-        user_data=findAVP("3GPP-User-Data",result_AVPs)
-        if user_data == -1:
-            user_data=findAVP("User-Data",result_AVPs)
-            if user_data == -1:
-                hss_logger.error ("no userdata")
-                return -1
-
-    except:
-        hss_logger.error ("no userdata")
-        return -1
-    else:
-        # remove xml formating
-        user_data = user_data.replace('\n', '').replace('\r', '')
-        hss_logger.debug ("User-Data:\n%s",user_data)
-        return user_data
 

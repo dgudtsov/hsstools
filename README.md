@@ -1,6 +1,6 @@
 # HSS Tools
 A set of useful tools to generate requests towards EPC or IMS HSS.  
-Copyright (c) 2015-2016 Denis Gudtsov
+Copyright (c) 2015-2017 Denis Gudtsov
 Project page: https://github.com/dgudtsov/hsstools
 
 Uses part of  Python Protocol Simulator project (c) Sergej Srepfler code - https://sourceforge.net/projects/pyprotosim/
@@ -8,8 +8,8 @@ Uses part of  Python Protocol Simulator project (c) Sergej Srepfler code - https
 
 The following interfaces and commands are supported:
  - Sh: UDR, SNR, PUR
- - Cx (work in progress): LIR, UAR, MAR, SAR
- - Zh (work in progress): MAR
+ - Cx: LIR, UAR, MAR, SAR
+ - Zh: MAR
 
 # Install
 1. download archive
@@ -26,7 +26,7 @@ conf - where config file is stored
 lib - program libraries  
 log - where log files are generated  
 pyprotosim - external Python Protocol Simulator tool  
-4. chmod a+x Sh.py  
+4. chmod a+x *.py  
 
 ## Prerequisite
 Python 2 version >= 2.6.6  
@@ -60,8 +60,67 @@ example: ./Sh.py UDR 79999999999 ALL
 ALL means: MMTEL-Services,IMS-ODB-Information,IMS-CAMEL-Services,MMTEL-Custom-Services,CM_SUBPROFILE,RMS_DYNAMIC_DATA  
 
 - to request specific data:  
-example: ./Sh.py UDR 79999999999 Location  
-example: ./Sh.py UDR 79999999999 TADS  
+example: ./Sh.py UDR 79999999999 Location
+```xml
+<Sh-Data>
+  <CSLocationInformation>
+    <LocationNumber>
+      xxx=
+    </LocationNumber>
+    <LocationAreaId>
+      xxx=
+    </LocationAreaId>
+    <VLRNumber>
+      <Address>
+        xxx==
+      </Address>
+    </VLRNumber>
+    <MSCNumber>
+      <Address>
+        xxx==
+      </Address>
+    </MSCNumber>
+    <AgeOfLocationInformation>
+      52
+    </AgeOfLocationInformation>
+  </CSLocationInformation>
+</Sh-Data>
+```
+and then decoded values follows:
+```
+decoding LocationAreaId
+result (MCC|MNC_LAI_CGI): 250f00_6004_
+LocationAreaId xxx= 250f006004
+decoding LocationNumber
+result (MCC|MNC_LAI_CGI): 400004_5002_
+LocationNumber xxx= 4000045002
+decoding VLRNumber
+result: 1xxxf
+VLRNumber xxx== 1970000000001f
+decoding MSCNumber
+result: 1xxxf
+MSCNumber xxx== 1970000000001f
+```
+
+example: ./Sh.py UDR 79999999999 TADS
+```xml
+<Sh-Data>
+  <Extension>
+    <Extension>
+      <Extension>
+        <TADSinformation>
+          <IMSVoiceOverPSSessionSupport>
+            1
+          </IMSVoiceOverPSSessionSupport>
+          <RATtype>
+            1004
+          </RATtype>
+        </TADSinformation>
+      </Extension>
+    </Extension>
+  </Extension>
+</Sh-Data>
+```
 
 - to update data  
 example: ./Sh.py PUR 79999999999 MMTEL-Services  
@@ -102,7 +161,58 @@ xmllint --noblanks MMTEL-Services.xml >MMTEL-Services
 ./Sh.py PUR 79999999999 MMTEL-Services  
 
 ## Cx
-to do
+```
+Format: ./Cx.py COMMAND IMSI MSISDN [AUTH]
+COMMAND: MAR, UAR, SAR, LIR
+IMSI: imsi of the subscriber
+MSISDN: msisdn of the subscriber
+AUTH (optional, only for MAR is required): SIP, AKA, NONE, Unknown
+
+IMPI and IMPU are constructed from IMSI/MSISDN
+```
+
+Examples:
+- to request SIP-Digest auth scheme
+example: ./Cx.py MAR 250009999999999 1234567 SIP
+
+- to request Digest-AKA auth scheme
+example: ./Cx.py MAR 250009999999999 1234567 AKA
+
+- to allow HSS select default auth scheme
+example: ./Cx.py MAR 250009999999999 1234567 Unknown
+
+- to request Cx user profile
+example: ./Cx.py SAR 250009999999999 1234567
+profile will be displayed on screen and stored into ./data/SAR_UD file
+
+- to request CSCF where subscriber is registered or unreg service for subscriber
+example: ./Cx.py LIR 250009999999999 1234567
+server-name or server-capabilities will be displayed on screen
+
+- to request PSI service number
+to request PSI you need to uncomment "Public-Identity" : "{TEL}" in Cx config and comment out "Public-Identity" : "{IMPU}" and User-Name
+example: ./Cx.py LIR 0 1234567
+imsi is not required for PSI
 
 ## Zh
-to do
+```
+Format: ./Zh COMMAND IMSI MSISDN [AUTH]
+COMMAND: MAR
+IMSI: imsi of the subscriber
+MSISDN: msisdn of the subscriber
+AUTH (optional, only for MAR is required): SIP, AKA, NONE, Unknown
+
+IMPI and IMPU are constructed from IMSI/MSISDN
+```
+Examples:
+- to request SIP-Digest auth scheme
+example: ./Zh MAR 250009999999999 1234567 SIP
+
+- to request Digest-AKA auth scheme
+example: ./Zh MAR 250009999999999 1234567 AKA
+
+- to allow HSS select default auth scheme
+example: ./Zh MAR 250009999999999 1234567 Unknown
+
+- The syntax of Zh request are fully equivalent to Cx MAR
+example: ./Cx.py MAR 250009999999999 1234567 AKA

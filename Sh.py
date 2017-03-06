@@ -4,7 +4,7 @@
 # HSS Tools
 
 ##################################################################
-# Copyright (c) 2015-2016 Denis Gudtsov
+# Copyright (c) 2015-2017 Denis Gudtsov
 # License - GPL
 # https://github.com/dgudtsov/hsstools
 #
@@ -79,57 +79,24 @@ import xml.dom.minidom
 ########## HELP OUTPUT ###########
 
 HELP = """
-Format: {APP_NAME} COMMAND MSISDN DATA
+Format: {APP_NAME} COMMAND IMSI MSISDN DATA
 COMMAND: one of UDR, PUR, SNR
 MSISDN: msisdn of the subscriber, without +
 DATA: Data-reference name OR Service-Indicator name of repository data
 DATA possible values are: {UDR}
 Examples:
 - to read data
-example: {APP_NAME} UDR 79999999999 MMTEL-Services
-example: {APP_NAME} UDR 79999999999 MMTEL-Services,IMS-CAMEL-Services
-example: {APP_NAME} UDR 79999999999 ALL
-example: {APP_NAME} UDR 79999999999 Location
-example: {APP_NAME} UDR 79999999999 TADS
+example: {APP_NAME} UDR 250000000000000 79999999999 MMTEL-Services
+example: {APP_NAME} UDR 250000000000000 79999999999 MMTEL-Services,IMS-CAMEL-Services
+example: {APP_NAME} UDR 250000000000000 79999999999 ALL
+example: {APP_NAME} UDR 250000000000000 79999999999 Location
+example: {APP_NAME} UDR 250000000000000 79999999999 TADS
 ALL means: {ALL_SI}
 - to update data
-example: {APP_NAME} PUR 79999999999 MMTEL-Services
+example: {APP_NAME} PUR 250000000000000 79999999999 MMTEL-Services
 """
 
 ########## HELP END ###########
-
-
-########## FUNCTIONS ###########
-
-def xml_get_seq(xml_doc):
-    xml_dom=xml.dom.minidom.parseString(xml_doc)
-    seq=xml_dom.getElementsByTagName("SequenceNumber")[0].firstChild.nodeValue
-    return int(seq)
-
-# takes xml.dom object and updates Node with new seq value
-# returns string
-def xml_update_seq(xml_dom,seq):
-    xml_dom.getElementsByTagName("SequenceNumber")[0].firstChild.nodeValue=seq
-    return xml_dom.toxml()
-
-def print_pretty_xml(xml_str):
-    logger.info("Printing pretty XML:")
-    try:
-        xml_dom=xml.dom.minidom.parseString(xml_str)
-        pretty_xml=xml_dom.toprettyxml(indent=" "*2)
-#        pretty_xml=xml_dom.toprettyxml()
-        logger.info( pretty_xml )
-        # check that xml contains CS Location information inside
-        if (xml_dom.getElementsByTagName("CSLocationInformation")):
-            logger.info( "cs location decoding")
-            loc_dump(xml_dom)
-
-        xml_dom.unlink()
-    except:
-        logger.error("can't pretty format xml %s",sys.exc_info())
-    return
-
-########## END FUNCTIONS ###########
 
 ########## VOID MAIN ###########
 
@@ -146,18 +113,32 @@ if __name__ == "__main__":
     eap.LoadEAPDictionary(pyprotosim_dict_path+"/dictEAP.xml")
 
     # ACTION: UDR / PUR / SNR
-    ACTION = sys.argv[1]
-
-    # IDENTITY: MSISDN
-    IDENTITY = sys.argv[2]
-
     # OPT: Service-Indicator or Data-Reference
-    OPT = sys.argv[3]
+    (ACTION,MSISDN,OPT) = sys.argv[1:4]
+    
+#    ACTION = sys.argv[1]
 
-    PUBLIC_IDENTITY=params["IMPU_format"].format(IDENTITY = IDENTITY,IMPU_domain = params["IMPU_domain"] )
+#    IMSI = sys.argv[2]
+#    MSISDN = sys.argv[3]
+
+    IMSI = MSISDN
+    
+#    OPT = sys.argv[4]
+
+#    PUBLIC_IDENTITY=params["IMPU_format"].format(IDENTITY = IDENTITY,IMPU_domain = params["IMPU_domain"] )
+    
+    IMPU=params["IMPU_format"].format(IDENTITY = MSISDN,IMPU_domain = params["IMPU_domain"] )
+    IMPI=params["IMPI_format"].format(IDENTITY = IMSI,IMPI_domain = params["IMPI_domain"] )
+    TEL=params["TEL_format"].format(IDENTITY = MSISDN)
+    
+    logger.info("IMPI ident: %s", IMPI)
+    logger.info("IMPU ident: %s", IMPU)
+    logger.info("TEL: %s", TEL)
+
+    
 #    IMPI = IDENTITY+params["IMPI_domain"]
 
-    logger.info("public ident: %s", PUBLIC_IDENTITY)
+#    logger.info("public ident: %s", PUBLIC_IDENTITY)
 #    logger.info("IMPI ident: %s", IMPI)
 
     # for summary report
@@ -166,89 +147,124 @@ if __name__ == "__main__":
     if ACTION in ['UDR','PUR', 'SNR']:
         config_dump()
     # UDR action should precede PUR
-        UDR_AVPs=diam_prefill_req(ACTION,OPT,IMPU=PUBLIC_IDENTITY)
+        UDR_AVPs=diam_prefill_req(ACTION,OPT,IMPU=IMPU)
         logger.info("prefilled request: %s", UDR_AVPs)
 
-        Conn=HSS_Connect(params["HOST"],params["PORT"],params["SRC_HOST"],params["SRC_PORT"])
+        Conn = HSS(params)
+
         if (Conn):
             logger.info("HSS IP connectivity established")
             # CER/CEA
-            CEA_result=diam_connect(Conn,params)
+#            CEA_result=diam_connect(Conn,params)
+            CEA_result=Conn.connect()
+            
             if CEA_result in DIAM_OK_CODE:
 
+#                for UDR_AVP in Diam_AVPs.REQ_AVP:
                 for UDR_AVP in UDR_AVPs:
                     if "Service-Indication" in UDR_AVP:
                         # mark unsupported by default
                         summary[UDR_AVP["Service-Indication"]] = False
 
-                    SESSION_ID=create_Session_Id(params["ORIGIN_HOST"],IDENTITY)
-                    logger.info("Session ID: %s", SESSION_ID)
+                    Diam_AVPs = Diam_request("UDR" if ACTION == "PUR" else ACTION,OPT,UDR_AVP,IMPI=IMPI,IMPU=IMPU,TEL=TEL)
 
+                    Diam_AVPs.create_Session_Id(params["ORIGIN_HOST"],IMSI)
+                    logger.info("Session ID: %s", Diam_AVPs.SESSION_ID)
+                    logger.info("preparing %s", "UDR" if ACTION == "PUR" else ACTION)
                     logger.info("requesting %s", UDR_AVP )
+                    
+                    Diam_AVPs.create_REQ(params)
+                    
+                    result_AVPs = Conn.diam_exec_req(Diam_AVPs)
+                    response = Diam_response(result_AVPs)
+                    result_code = response.get_result_code()
 
-#                    msg=create_SNR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,PUBLIC_IDENTITY,UDR_AVP)
-                    msg=create_SNR(params,SESSION_ID,UDR_AVP) if ACTION=='SNR' else create_UDR(params,SESSION_ID,UDR_AVP)
-                    user_data=diam_retrive(Conn,msg)
+                    if result_code>0:
+                        result_descr = response.get_result_descr()
+                        logger.info ("RES result code: %s %s", result_code, result_descr)
+                        exp_result_code=0
+                    else:
+                        exp_result_code = response.get_exp_result_code()
+                        exp_result_descr = response.get_exp_result_descr()
+                        logger.info ("Exp RES result code: %s %s", exp_result_code, exp_result_descr)
+                
+                    response.dump_Payload()
+                   
+                    user_data=Conn.diam_retrive(Diam_AVPs)                    
+
                     if ACTION == 'UDR':
+                        
                         if (user_data!=-1):
                             if len(user_data)>10:
-#                                logger.info(UDR_AVP)
+                                
                                 if "Service-Indication" in UDR_AVP:  summary[UDR_AVP["Service-Indication"]] = True
+                                
+                                UD = Diam_userdata(user_data)
                                 if PRINT_PRETTY_XML:
-                                    print_pretty_xml(user_data)
-                            try:
-                                filename=UDR_AVP["Service-Indication"]
-                                logger.info ("writing userdata into file: %s",filename)
-                                save_xml_file(filename,user_data)
-                            except:
-                                pass
-#                                logger.error ("failed to save userdata into file")
+                                    UD.print_pretty_xml()
+                        
+                                    try:
+                                        filename=UDR_AVP["Service-Indication"]
+                                        logger.info ("writing userdata into file: %s",filename)
+                                        UD.save_xml_file(filename)
+                                    except:
+                                        pass
+        #                                logger.error ("failed to save userdata into file")
                     elif ACTION == 'PUR':
                         logger.info("Preparing update")
                         try:
                             # trying to load data from file
                             filename=UDR_AVP["Service-Indication"]
+                            
+                            UD_new = Diam_userdata(None)
+                            xml_profile_result = UD_new.read_xml_file(filename)
 
-                            # xml_profile - xml.dom document
-                            xml_profile = read_xml_file(filename)
                         except:
                             logger.error("loading data from file %s failed",filename)
                         else:
                             # retrive current seq number from previous UDR req
-#                            if (user_data!=-1)&(len(user_data)>10):
                             if (user_data!=-1):
                             # then seq > 0
-                                sequence_num=xml_get_seq(user_data)+1
+                                UD_old = Diam_userdata(user_data)
+                                sequence_num=UD_old.xml_get_seq()+1
                             else:
                                 sequence_num=0
                             logger.info("new sequence number for subscriber profile = %s",sequence_num)
 
                             PUR_AVP=UDR_AVP.copy()
-                            UD=""
-                            if (xml_profile):
-                                UD = xml_update_seq(xml_profile,sequence_num)
-                                logger.info ("UD: "+UD.replace('\n',''))
-                                PUR_AVP["3GPP-User-Data"]=str(UD.replace('\n',''))
+                            
+                            if (xml_profile_result):
+                                UD_new.xml_update_seq(sequence_num)
+
+                                logger.info ("UD: "+UD_new.dump())
+                                PUR_AVP["3GPP-User-Data"]=str(UD_new.dump())
+
+                                
                                 logger.debug("PUR AVP: %s",PUR_AVP)
+                                
+                                Diam_AVPs_PUR = Diam_request(ACTION,OPT,PUR_AVP,IMPI=IMPI,IMPU=IMPU,TEL=TEL)
+                                Diam_AVPs_PUR.create_Session_Id(params["ORIGIN_HOST"],IMSI)
+                                
+                                Diam_AVPs_PUR.create_REQ(params)
+                                
+                                result_AVPs = Conn.diam_exec_req(Diam_AVPs_PUR)
+                                
+                                response = Diam_response(result_AVPs)
+                                result_code = response.get_result_code()                                
 
-                                msg=create_PUR(params,SESSION_ID,PUR_AVP)
-#                                user_data=diam_retrive(Conn,msg)
-                                result_AVPs = diam_exec_req(Conn, msg)
-
-                                if (print_result(result_AVPs) in DIAM_OK_CODE):
+                                if (response.print_result() in DIAM_OK_CODE):
                                         summary[UDR_AVP["Service-Indication"]] = True
 
-                                dump_Payload(result_AVPs)
+                                response.dump_Payload()
 
                 ###########################################################
                 # Disconnecting peer
-                diam_disconnect(Conn,params)
-                # And close the connection
-                Conn.close()
+                Conn.disconnect(params)
+
         else:
             logger.error("can't connect to HSS %s:%s",params["HOST"],params["PORT"])
     else:
-        print "Only UDR, SNR or PUR actions are supported currently"
+        print "Only UDR, SNR or PUR actions are supported"
         logger.info("wrong action selected, exiting")
         exit()
     logger.info("Summary:")
